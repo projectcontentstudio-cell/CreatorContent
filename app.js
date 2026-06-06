@@ -64,6 +64,12 @@ const promptPopup = document.querySelector("#promptPopup");
 const promptPopupClose = document.querySelector("#promptPopupClose");
 const promptPopupText = document.querySelector("#promptPopupText");
 const promptPopupCopy = document.querySelector("#promptPopupCopy");
+const uploadPopup = document.querySelector("#uploadPopup");
+const uploadPopupClose = document.querySelector("#uploadPopupClose");
+const popupFramesInput = document.querySelector("#popupFramesInput");
+const popupUploadStatus = document.querySelector("#popupUploadStatus");
+const popupUploadThumbs = document.querySelector("#popupUploadThumbs");
+const popupUploadOk = document.querySelector("#popupUploadOk");
 
 let frames = Array(FRAME_COUNT).fill(null);
 let subtitles = [
@@ -83,6 +89,7 @@ let hasGeneratedScript = false;
 let currentPreviewIndex = 0;
 let latestProcessPercent = 0;
 let processWasClosed = false;
+let renderedVideoUrl = "";
 const nichePresets = {
   scary: {
     label: "Seram",
@@ -173,6 +180,12 @@ function init() {
     if (event.target === scriptPopup) closeScriptPopup();
   });
   if (popupUseScript) popupUseScript.addEventListener("click", useScriptPopup);
+  if (uploadPopupClose) uploadPopupClose.addEventListener("click", closeUploadPopup);
+  if (uploadPopup) uploadPopup.addEventListener("click", (event) => {
+    if (event.target === uploadPopup) closeUploadPopup();
+  });
+  if (popupFramesInput) popupFramesInput.addEventListener("change", handlePopupUpload);
+  if (popupUploadOk) popupUploadOk.addEventListener("click", confirmPopupUpload);
   if (promptPopupClose) promptPopupClose.addEventListener("click", closePromptPopup);
   if (promptPopup) promptPopup.addEventListener("click", (event) => {
     if (event.target === promptPopup) closePromptPopup();
@@ -288,12 +301,28 @@ function renderScriptPopupList() {
   if (!scriptPopupList) return;
   scriptPopupList.innerHTML = "";
   subtitles.forEach((text, index) => {
-    const item = document.createElement("label");
+    const item = document.createElement("article");
     item.className = "script-popup-item";
     item.innerHTML = `
-      <span>Frame ${index + 1}</span>
-      <textarea aria-label="Popup script frame ${index + 1}">${text}</textarea>
+      <div class="script-popup-item-head">
+        <span>Frame ${index + 1}</span>
+        <div>
+          <button type="button" data-action="edit" title="Edit script">Edit</button>
+          <button type="button" data-action="play" title="Play voice">Play</button>
+        </div>
+      </div>
+      <textarea aria-label="Popup script frame ${index + 1}" readonly>${text}</textarea>
     `;
+    const textarea = item.querySelector("textarea");
+    item.querySelector('[data-action="edit"]').addEventListener("click", () => {
+      textarea.readOnly = !textarea.readOnly;
+      textarea.focus();
+    });
+    item.querySelector('[data-action="play"]').addEventListener("click", () => {
+      subtitles[index] = cleanNarrationText(textarea.value);
+      textarea.value = subtitles[index];
+      playFrameVoice(index);
+    });
     scriptPopupList.append(item);
   });
 }
@@ -325,6 +354,59 @@ function closeScriptPopup() {
   scriptPopup.hidden = true;
 }
 
+function openUploadPopup() {
+  if (!uploadPopup) return;
+  if (popupFramesInput) popupFramesInput.value = "";
+  if (popupUploadThumbs) popupUploadThumbs.innerHTML = "";
+  if (popupUploadStatus) popupUploadStatus.textContent = "No images selected.";
+  if (popupUploadOk) popupUploadOk.disabled = true;
+  uploadPopup.hidden = false;
+}
+
+function closeUploadPopup() {
+  if (!uploadPopup) return;
+  uploadPopup.hidden = true;
+}
+
+async function handlePopupUpload() {
+  const files = Array.from(popupFramesInput?.files || []).slice(0, FRAME_COUNT);
+  if (popupUploadThumbs) popupUploadThumbs.innerHTML = "";
+  if (files.length !== FRAME_COUNT) {
+    if (popupUploadStatus) popupUploadStatus.textContent = `Please choose exactly ${FRAME_COUNT} images.`;
+    if (popupUploadOk) popupUploadOk.disabled = true;
+    return;
+  }
+  try {
+    const loadedFrames = await Promise.all(files.map((file, index) => fileToFrame(file, index)));
+    frames = loadedFrames;
+    clearDownloadReady();
+    renderedVideoUrl = "";
+    renderFrameSlots(0);
+    syncUi();
+    if (popupUploadThumbs) {
+      loadedFrames.forEach((frame, index) => {
+        const thumb = document.createElement("img");
+        thumb.src = frame.url;
+        thumb.alt = frame.name || `Frame ${index + 1}`;
+        popupUploadThumbs.append(thumb);
+      });
+    }
+    if (popupUploadStatus) popupUploadStatus.textContent = `${FRAME_COUNT} images ready.`;
+    if (popupUploadOk) popupUploadOk.disabled = false;
+  } catch (error) {
+    if (popupUploadStatus) popupUploadStatus.textContent = error.message;
+    if (popupUploadOk) popupUploadOk.disabled = true;
+  }
+}
+
+function confirmPopupUpload() {
+  if (frames.filter(Boolean).length !== FRAME_COUNT) return;
+  closeUploadPopup();
+  progressFill.style.width = "0";
+  drawScene(0, 0.35);
+  syncUi();
+}
+
 function useScriptPopup() {
   if (!scriptPopupList) return;
   scriptPopupList.querySelectorAll("textarea").forEach((textarea, index) => {
@@ -336,6 +418,7 @@ function useScriptPopup() {
   showPrompts(false);
   drawScene(0, 0.35);
   closeScriptPopup();
+  openUploadPopup();
 }
 
 function formatTime(seconds) {
@@ -406,7 +489,12 @@ function syncUi() {
   if (readyCount) readyCount.textContent = `${count}/${FRAME_COUNT}`;
   emptyState.hidden = count > 0;
   exportBtn.disabled = count !== FRAME_COUNT || isRendering;
-  exportBtn.hidden = count !== FRAME_COUNT || isRendering;
+  exportBtn.hidden = false;
+  exportBtn.textContent = isRendering
+    ? "Rendering..."
+    : renderedVideoUrl
+      ? "Download MP4"
+      : "Generate Video";
   playBtn.disabled = count === 0 || isRendering;
   if (generateImagesBtn) generateImagesBtn.disabled = isRendering;
   if (hearScriptBtn) hearScriptBtn.disabled = isRendering || !hasGeneratedScript;
@@ -1225,6 +1313,8 @@ function fileToFrame(file, index) {
 }
 
 function clearDownloadReady() {
+  if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
+  renderedVideoUrl = "";
   downloadLink.classList.remove("ready");
   downloadLink.hidden = true;
   downloadLink.removeAttribute("href");
@@ -1308,6 +1398,10 @@ function speakAll() {
 }
 
 async function exportVideo() {
+  if (renderedVideoUrl) {
+    downloadLink.click();
+    return;
+  }
   if (frames.filter(Boolean).length !== FRAME_COUNT || isRendering) return;
   stopPreview();
   isRendering = true;
@@ -1358,6 +1452,7 @@ async function exportVideo() {
     const blob = new Blob(chunks, { type: outputMime });
     if (!blob.size) throw new Error("Video render returned an empty file.");
     const url = URL.createObjectURL(blob);
+    renderedVideoUrl = url;
     downloadLink.href = url;
     downloadLink.classList.add("ready");
     downloadLink.hidden = false;
@@ -1374,7 +1469,6 @@ async function exportVideo() {
   } finally {
     if (audioContext) await audioContext.close().catch(() => {});
     isRendering = false;
-    exportBtn.textContent = "Download MP4";
     updatePreviewProgressBadge();
     syncUi();
   }

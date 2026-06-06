@@ -250,7 +250,7 @@
 
         <div class="stage-actions">
           <button id="openScriptPopupBtn" class="secondary-btn compact-action" type="button">Open Script</button>
-          <button id="exportBtn" class="primary-btn" type="button">Download MP4</button>
+          <button id="exportBtn" class="primary-btn" type="button">Generate Video</button>
           <a id="downloadLink" class="download-link" download="storyframe-video.mp4">Download ready</a>
         </div>
       </section>
@@ -280,6 +280,27 @@
       <div class="script-popup-actions">
         <button id="popupRegenerateScript" class="secondary-btn" type="button">Regenerate Script</button>
         <button id="popupUseScript" class="primary-btn" type="button">Use Script</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="uploadPopup" class="script-popup upload-popup" hidden>
+    <div class="script-popup-card upload-popup-card">
+      <button id="uploadPopupClose" class="lightbox-close" type="button" aria-label="Close upload popup">x</button>
+      <header>
+        <div>
+          <h2>Upload 4 Images</h2>
+          <p>Choose four frames, then continue to preview.</p>
+        </div>
+      </header>
+      <label class="upload-popup-drop">
+        <input id="popupFramesInput" type="file" accept="image/*" multiple>
+        <span>Choose 4 Images</span>
+        <small id="popupUploadStatus">No images selected.</small>
+      </label>
+      <div id="popupUploadThumbs" class="popup-upload-thumbs"></div>
+      <div class="script-popup-actions">
+        <button id="popupUploadOk" class="primary-btn" type="button" disabled>OK, Preview</button>
       </div>
     </div>
   </div>
