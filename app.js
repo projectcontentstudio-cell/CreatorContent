@@ -3,6 +3,10 @@ const DURATION_OPTIONS = [20, 40, 60, 80];
 const FPS = 30;
 const MAX_IMAGE_RETRIES = 3;
 const MAX_SUBTITLE_CHARS = 60;
+const CREDIT_STORAGE_KEY = "storyframe_admin_credits";
+const STARTING_CREDITS = 1000;
+const SCRIPT_CREDIT_COST = 1;
+const VIDEO_CREDIT_COST = 10;
 let FRAME_COUNT = 4;
 let WIDTH = 480;
 let HEIGHT = 854;
@@ -87,6 +91,8 @@ const scriptPanel = document.querySelector(".script-panel");
 const wizardStepButtons = document.querySelectorAll("[data-wizard-step]");
 const guideBackBtn = document.querySelector("#guideBackBtn");
 const guideNextBtn = document.querySelector("#guideNextBtn");
+const creditBalance = document.querySelector("#creditBalance");
+const frameCountChip = document.querySelector("#frameCountChip");
 
 let frames = Array(FRAME_COUNT).fill(null);
 let subtitles = [
@@ -108,6 +114,7 @@ let latestProcessPercent = 0;
 let processWasClosed = false;
 let renderedVideoUrl = "";
 let guideStep = 1;
+let adminCredits = readCredits();
 const nichePresets = {
   scary: {
     label: "Seram",
@@ -710,15 +717,50 @@ function buildGenerationDescription() {
   return `Niche: ${preset.label}. Direction: ${preset.prompt}. User idea: ${idea}`;
 }
 
+function readCredits() {
+  const saved = Number(localStorage.getItem(CREDIT_STORAGE_KEY));
+  if (Number.isFinite(saved) && saved >= 0) return Math.floor(saved);
+  localStorage.setItem(CREDIT_STORAGE_KEY, String(STARTING_CREDITS));
+  return STARTING_CREDITS;
+}
+
+function saveCredits() {
+  localStorage.setItem(CREDIT_STORAGE_KEY, String(adminCredits));
+  updateCreditUi();
+}
+
+function updateCreditUi() {
+  if (!creditBalance) return;
+  creditBalance.textContent = `${adminCredits} credits`;
+  creditBalance.classList.toggle("low-credit", adminCredits < VIDEO_CREDIT_COST);
+}
+
+function canSpendCredits(cost, label) {
+  if (adminCredits >= cost) return true;
+  alert(`Not enough credits for ${label}. Need ${cost}, current balance ${adminCredits}.`);
+  return false;
+}
+
+function spendCredits(cost, label) {
+  if (!canSpendCredits(cost, label)) return false;
+  adminCredits -= cost;
+  saveCredits();
+  return true;
+}
+
 function syncUi() {
   const count = frames.filter(Boolean).length;
+  updateCreditUi();
+  if (frameCountChip) frameCountChip.textContent = `${FRAME_COUNT} Frames`;
   if (readyCount) readyCount.textContent = `${count}/${FRAME_COUNT}`;
   if (manualUploadTitle) manualUploadTitle.textContent = `Upload ${FRAME_COUNT} Story Images`;
-  if (manualUploadButtonText) manualUploadButtonText.textContent = `Upload ${FRAME_COUNT} Images`;
+  if (manualUploadButtonText) {
+    manualUploadButtonText.textContent = count === FRAME_COUNT ? "All Images Ready" : `Upload Image ${count + 1}`;
+  }
   if (manualUploadStatus) {
     manualUploadStatus.textContent = count === FRAME_COUNT
-      ? `${FRAME_COUNT} images ready. Continue to Preview.`
-      : `Upload one image for each script frame. ${count}/${FRAME_COUNT} ready.`;
+      ? `${FRAME_COUNT} images ready. Click Next: Preview.`
+      : `Upload one image at a time. Next upload fills Image ${count + 1}. ${count}/${FRAME_COUNT} ready.`;
   }
   if (emptyStateTitle) emptyStateTitle.textContent = `Upload ${FRAME_COUNT} frames`;
   if (emptyStateDetail) {
@@ -970,11 +1012,13 @@ function roundRect(context, x, y, width, height, radius) {
 async function generateStory(options = {}) {
   const shouldOpenPopup = options.openPopup !== false;
   if (isRendering && !options.force) return;
+  if (!canSpendCredits(SCRIPT_CREDIT_COST, "script generation")) return;
   const userDescription = storyIdea.value.trim();
-    if (generateStoryBtn) {
-      generateStoryBtn.textContent = "Writing script...";
-      generateStoryBtn.disabled = true;
-    }
+  let shouldChargeCredit = true;
+  if (generateStoryBtn) {
+    generateStoryBtn.textContent = "Writing script...";
+    generateStoryBtn.disabled = true;
+  }
   try {
     const response = await fetch("/api/generate-script", {
       method: "POST",
@@ -1000,6 +1044,10 @@ async function generateStory(options = {}) {
       cleanNarrationText(String(result.frames[index] || createDefaultSubtitle(index)))
     );
     hasGeneratedScript = true;
+    if (shouldChargeCredit) {
+      spendCredits(SCRIPT_CREDIT_COST, "script generation");
+      shouldChargeCredit = false;
+    }
     apiStatus.textContent = "AI frame script ready.";
     voiceStatus.textContent = "Script ready. Click Hear Script to preview voice.";
     if (shouldOpenPopup) openScriptPopup();
@@ -1007,6 +1055,10 @@ async function generateStory(options = {}) {
     apiStatus.textContent = `${error.message} Using local script fallback.`;
     generateLocalStory();
     hasGeneratedScript = true;
+    if (shouldChargeCredit) {
+      spendCredits(SCRIPT_CREDIT_COST, "script generation");
+      shouldChargeCredit = false;
+    }
     if (shouldOpenPopup) openScriptPopup();
   } finally {
     if (generateStoryBtn) {
@@ -1393,40 +1445,46 @@ function apiImageToFrame(item, index) {
 
 async function handleManualUpload(event) {
   const selectedFiles = Array.from(event.target.files || []);
-  if (selectedFiles.length !== FRAME_COUNT) {
-    manualUploadStatus.textContent = `Please choose exactly ${FRAME_COUNT} images.`;
-    alert(`Please choose exactly ${FRAME_COUNT} images for the ${FRAME_COUNT}-frame video.`);
+  if (!selectedFiles.length) return;
+  const emptyIndexes = frames
+    .map((frame, index) => frame ? -1 : index)
+    .filter(index => index >= 0);
+  if (!emptyIndexes.length) {
+    manualUploadStatus.textContent = "All image slots are already ready.";
     event.target.value = "";
     return;
   }
+  const filesToLoad = selectedFiles.slice(0, emptyIndexes.length);
+  const ignoredCount = selectedFiles.length - filesToLoad.length;
 
   isRendering = true;
-  manualUploadStatus.textContent = `Loading your ${FRAME_COUNT} images...`;
+  manualUploadStatus.textContent = `Loading ${filesToLoad.length} image${filesToLoad.length === 1 ? "" : "s"}...`;
   showProcess("Manual Upload", "Reading images...", 8);
   setProcess(0, "Loading", 8);
 
   try {
-    const uploadedFrames = [];
-    for (let index = 0; index < selectedFiles.length; index += 1) {
-      uploadedFrames.push(await fileToFrame(selectedFiles[index], index));
-      setProcess(0, "Loading", 12 + Math.round(((index + 1) / FRAME_COUNT) * 78));
+    let firstAddedIndex = emptyIndexes[0];
+    for (let index = 0; index < filesToLoad.length; index += 1) {
+      const targetIndex = emptyIndexes[index];
+      frames[targetIndex] = await fileToFrame(filesToLoad[index], targetIndex);
+      setProcess(0, "Loading", 12 + Math.round(((index + 1) / filesToLoad.length) * 78));
     }
 
     stopPreview();
-    frames = uploadedFrames;
-    clearNarrationCache();
     clearDownloadReady();
     progressFill.style.width = "0";
-    manualUploadStatus.textContent = `${FRAME_COUNT} images loaded. Continue to Preview.`;
-    renderFrameSlots(0);
-    renderUploadGuide(0);
+    const ready = frames.filter(Boolean).length;
+    manualUploadStatus.textContent = ready === FRAME_COUNT
+      ? `${FRAME_COUNT} images ready. Click Next: Preview.`
+      : `${ready}/${FRAME_COUNT} images ready. Next upload will fill Image ${ready + 1}.${ignoredCount > 0 ? ` ${ignoredCount} extra ignored.` : ""}`;
+    renderFrameSlots(firstAddedIndex);
+    renderUploadGuide(firstAddedIndex);
     syncUi();
-    drawScene(0, 0.35);
-    setGuideStep(4);
+    drawScene(firstAddedIndex, 0.35);
     setProcess(4, "Loading", 100);
     setTimeout(() => hideProcessUi(), 500);
   } catch (error) {
-    manualUploadStatus.textContent = "Upload failed. Try another image set.";
+    manualUploadStatus.textContent = "Upload failed. Try another image.";
     failProcess(error.message || "Could not load uploaded images.");
     alert(error.message || "Could not load uploaded images.");
   } finally {
@@ -1555,6 +1613,8 @@ async function exportVideo() {
     return;
   }
   if (frames.filter(Boolean).length !== FRAME_COUNT || isRendering) return;
+  if (!spendCredits(VIDEO_CREDIT_COST, "video generation")) return;
+  let videoCreditCharged = true;
   stopPreview();
   isRendering = true;
   downloadLink.classList.remove("ready");
@@ -1622,6 +1682,11 @@ async function exportVideo() {
       hideProcessUi();
     }, 900);
   } catch (error) {
+    if (videoCreditCharged) {
+      adminCredits += VIDEO_CREDIT_COST;
+      videoCreditCharged = false;
+      saveCredits();
+    }
     failProcess(error.message);
     alert(error.message);
   } finally {
