@@ -7,10 +7,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=hide-step1-stage-20260606">
+  <link rel="stylesheet" href="style.css?v=premium-layout-20260606">
 </head>
 <body>
   <main class="app-shell">
+    <header class="app-header">
+      <div class="app-kicker">CreatorContent</div>
+      <div class="app-status">
+        <span>4 Frames</span>
+        <span>Voice Sync</span>
+        <span>MP4 Export</span>
+      </div>
+    </header>
     <section class="workspace">
       <aside class="control-panel">
         <div class="brand-row">
@@ -29,35 +37,35 @@
           <div class="niche-grid" role="radiogroup" aria-label="Content niche">
             <label>
               <input type="radio" name="contentNiche" value="scary" checked>
-              <span>Seram</span>
+              <span data-label="Seram">Seram</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="facts">
-              <span>Fakta</span>
+              <span data-label="Fakta">Fakta</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="history">
-              <span>History</span>
+              <span data-label="History">History</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="motivation">
-              <span>Motivasi</span>
+              <span data-label="Motivasi">Motivasi</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="kids">
-              <span>Kids</span>
+              <span data-label="Kids">Kids</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="anime">
-              <span>Anime</span>
+              <span data-label="Anime">Anime</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="islamic">
-              <span>Islamic</span>
+              <span data-label="Islamic">Islamic</span>
             </label>
             <label>
               <input type="radio" name="contentNiche" value="drama">
-              <span>Drama</span>
+              <span data-label="Drama">Drama</span>
             </label>
           </div>
         </div>
@@ -245,8 +253,8 @@
 
         <div class="preview-frame">
           <canvas id="videoCanvas" width="1280" height="720"></canvas>
-          <button id="previewPrevBtn" class="preview-arrow preview-arrow-left" type="button" aria-label="Previous image">‹</button>
-          <button id="previewNextBtn" class="preview-arrow preview-arrow-right" type="button" aria-label="Next image">›</button>
+          <button id="previewPrevBtn" class="preview-arrow preview-arrow-left" type="button" aria-label="Previous image">&lsaquo;</button>
+          <button id="previewNextBtn" class="preview-arrow preview-arrow-right" type="button" aria-label="Next image">&rsaquo;</button>
           <button id="previewProgressBadge" class="preview-progress-badge" type="button" hidden>Loading 0%</button>
           <div id="emptyState" class="empty-state">
             <strong>Upload 4 frames</strong>
@@ -316,6 +324,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=hide-step1-stage-20260606"></script>
+  <script src="app.js?v=premium-layout-20260606"></script>
 </body>
 </html>
