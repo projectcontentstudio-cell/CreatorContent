@@ -718,8 +718,9 @@ function buildGenerationDescription() {
 }
 
 function readCredits() {
-  const saved = Number(localStorage.getItem(CREDIT_STORAGE_KEY));
-  if (Number.isFinite(saved) && saved >= 0) return Math.floor(saved);
+  const rawCredit = localStorage.getItem(CREDIT_STORAGE_KEY);
+  const saved = Number(rawCredit);
+  if (rawCredit !== null && rawCredit !== "" && Number.isFinite(saved) && saved >= 0) return Math.floor(saved);
   localStorage.setItem(CREDIT_STORAGE_KEY, String(STARTING_CREDITS));
   return STARTING_CREDITS;
 }
