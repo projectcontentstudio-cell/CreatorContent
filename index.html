@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=premium-layout-20260606">
+  <link rel="stylesheet" href="style.css?v=duration-upload-guide-20260606">
 </head>
 <body>
   <main class="app-shell">
@@ -89,6 +89,15 @@
           <select id="scriptLanguage">
             <option value="english">English</option>
             <option value="malay" selected>Malay</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="videoDuration">Video duration</label>
+          <select id="videoDuration">
+            <option value="20" selected>20 seconds - 4 images</option>
+            <option value="40">40 seconds - 8 images</option>
+            <option value="60">60 seconds - 12 images</option>
+            <option value="80">80 seconds - 16 images</option>
           </select>
         </div>
         <button id="continueToScriptBtn" class="primary-btn full-action" type="button">Continue to Script</button>
@@ -226,14 +235,16 @@
 
         <div class="manual-upload-bar">
           <div>
-            <strong>Manual Upload</strong>
-            <small id="manualUploadStatus">Upload 4 images to use your own frames.</small>
+            <strong id="manualUploadTitle">Upload Story Images</strong>
+            <small id="manualUploadStatus">Upload one image for each script frame.</small>
           </div>
           <label class="manual-upload-button">
             <input id="manualFramesInput" type="file" accept="image/*" multiple>
-            <span>Upload 4 Images</span>
+            <span id="manualUploadButtonText">Upload Images</span>
           </label>
         </div>
+
+        <div id="uploadGuideGrid" class="upload-guide-grid" hidden></div>
 
         <div id="processPanel" class="process-panel" hidden>
           <div class="process-head">
@@ -257,8 +268,8 @@
           <button id="previewNextBtn" class="preview-arrow preview-arrow-right" type="button" aria-label="Next image">&rsaquo;</button>
           <button id="previewProgressBadge" class="preview-progress-badge" type="button" hidden>Loading 0%</button>
           <div id="emptyState" class="empty-state">
-            <strong>Upload 4 frames</strong>
-            <span>The final video renders here with zoom/cut motion, 5-second narration, and voice timing.</span>
+            <strong id="emptyStateTitle">Upload story frames</strong>
+            <span id="emptyStateDetail">The final video renders here with zoom/cut motion, subtitles, and voice timing.</span>
           </div>
         </div>
 
@@ -308,13 +319,13 @@
       <button id="uploadPopupClose" class="lightbox-close" type="button" aria-label="Close upload popup">x</button>
       <header>
         <div>
-          <h2>Upload 4 Images</h2>
-          <p>Choose four frames, then continue to preview.</p>
+          <h2 id="uploadPopupTitle">Upload Story Images</h2>
+          <p id="uploadPopupIntro">Choose the exact number of story images, then continue to preview.</p>
         </div>
       </header>
       <label class="upload-popup-drop">
         <input id="popupFramesInput" type="file" accept="image/*" multiple>
-        <span>Choose 4 Images</span>
+        <span id="popupUploadButtonText">Choose Images</span>
         <small id="popupUploadStatus">No images selected.</small>
       </label>
       <div id="popupUploadThumbs" class="popup-upload-thumbs"></div>
@@ -324,6 +335,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=premium-layout-20260606"></script>
+  <script src="app.js?v=duration-upload-guide-20260606"></script>
 </body>
 </html>

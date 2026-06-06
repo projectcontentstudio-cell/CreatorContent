@@ -1,8 +1,9 @@
-const FRAME_COUNT = 4;
 const FRAME_SECONDS = 5;
+const DURATION_OPTIONS = [20, 40, 60, 80];
 const FPS = 30;
 const MAX_IMAGE_RETRIES = 3;
 const MAX_SUBTITLE_CHARS = 60;
+let FRAME_COUNT = 4;
 let WIDTH = 480;
 let HEIGHT = 854;
 
@@ -23,6 +24,7 @@ const aiProviderInputs = document.querySelectorAll("input[name='aiProvider']");
 const voiceProviderInputs = document.querySelectorAll("input[name='voiceProvider']");
 const contentNicheInputs = document.querySelectorAll("input[name='contentNiche']");
 const videoFormat = document.querySelector("#videoFormat");
+const videoDuration = document.querySelector("#videoDuration");
 const scriptLanguage = document.querySelector("#scriptLanguage");
 const motionStyle = document.querySelector("#motionStyle");
 const subtitleStyle = document.querySelector("#subtitleStyle");
@@ -62,6 +64,9 @@ const popupRegenerateScript = document.querySelector("#popupRegenerateScript");
 const popupUseScript = document.querySelector("#popupUseScript");
 const uploadPopup = document.querySelector("#uploadPopup");
 const uploadPopupClose = document.querySelector("#uploadPopupClose");
+const uploadPopupTitle = document.querySelector("#uploadPopupTitle");
+const uploadPopupIntro = document.querySelector("#uploadPopupIntro");
+const popupUploadButtonText = document.querySelector("#popupUploadButtonText");
 const popupFramesInput = document.querySelector("#popupFramesInput");
 const popupUploadStatus = document.querySelector("#popupUploadStatus");
 const popupUploadThumbs = document.querySelector("#popupUploadThumbs");
@@ -70,6 +75,11 @@ const controlPanel = document.querySelector(".control-panel");
 const stagePanel = document.querySelector(".stage-panel");
 const topGenerator = document.querySelector(".top-generator");
 const manualUploadBar = document.querySelector(".manual-upload-bar");
+const manualUploadTitle = document.querySelector("#manualUploadTitle");
+const manualUploadButtonText = document.querySelector("#manualUploadButtonText");
+const uploadGuideGrid = document.querySelector("#uploadGuideGrid");
+const emptyStateTitle = document.querySelector("#emptyStateTitle");
+const emptyStateDetail = document.querySelector("#emptyStateDetail");
 const previewFrame = document.querySelector(".preview-frame");
 const progressShell = document.querySelector(".progress-shell");
 const stageActions = document.querySelector(".stage-actions");
@@ -150,10 +160,12 @@ const nichePresets = {
 };
 
 function init() {
+  setFrameCount(getFrameCountFromDuration(), { preserveStory: true, silent: true });
   applyVideoFormat();
   applySelectedNiche({ forceTitle: false });
   renderFrameSlots();
   renderScriptList();
+  renderUploadGuide();
   drawPlaceholder();
   syncUi();
 
@@ -213,6 +225,14 @@ function init() {
     drawScene(getCurrentFrameFromProgress(), 0.35);
     syncUi();
   });
+  if (videoDuration) videoDuration.addEventListener("change", () => {
+    setFrameCount(getFrameCountFromDuration(), { preserveStory: hasGeneratedScript });
+    renderScriptList();
+    renderFrameSlots();
+    renderUploadGuide();
+    drawPlaceholder();
+    syncUi();
+  });
   voiceProviderInputs.forEach(input => input.addEventListener("change", () => {
     clearNarrationCache();
     updateVoiceStatus();
@@ -239,6 +259,79 @@ function init() {
   }
   checkApiStatus();
   setGuideStep(1);
+}
+
+function getFrameCountFromDuration() {
+  const selectedDuration = Number(videoDuration?.value || 20);
+  const safeDuration = DURATION_OPTIONS.includes(selectedDuration) ? selectedDuration : 20;
+  return Math.max(1, Math.round(safeDuration / FRAME_SECONDS));
+}
+
+function getSelectedDuration() {
+  return FRAME_COUNT * FRAME_SECONDS;
+}
+
+function createDefaultSubtitle(index) {
+  const malayLines = [
+    "Cerita bermula dengan satu tanda pelik.",
+    "Watak utama melihat sesuatu yang berubah.",
+    "Dia melangkah lebih dekat dengan berani.",
+    "Satu rahsia kecil mula terbuka.",
+    "Keadaan menjadi lebih tegang.",
+    "Dia perlu memilih jalan seterusnya.",
+    "Petunjuk baru muncul tanpa disangka.",
+    "Semua mula faham perkara sebenar.",
+    "Keputusan itu mengubah suasana.",
+    "Harapan kecil kembali menyala.",
+    "Akhirnya semuanya menjadi jelas.",
+    "Cerita tamat dengan makna baru.",
+    "Satu momen terakhir kekal di hati.",
+    "Dunia mereka terasa berbeza.",
+    "Perjalanan itu tidak sia-sia.",
+    "Mereka pulang dengan jawapan."
+  ];
+  const englishLines = [
+    "The story begins with one strange sign.",
+    "The main character sees something change.",
+    "They step closer with quiet courage.",
+    "A small secret starts to appear.",
+    "The moment becomes more intense.",
+    "They must choose the next path.",
+    "A new clue appears unexpectedly.",
+    "Everyone starts seeing the truth.",
+    "That decision changes the mood.",
+    "A small hope begins to return.",
+    "At last everything becomes clear.",
+    "The story ends with new meaning.",
+    "One final moment stays behind.",
+    "Their world now feels different.",
+    "The journey was not wasted.",
+    "They return with an answer."
+  ];
+  const bank = scriptLanguage?.value === "malay" ? malayLines : englishLines;
+  return bank[index % bank.length];
+}
+
+function setFrameCount(nextCount, options = {}) {
+  const safeCount = Math.max(4, Math.min(16, Number(nextCount) || 4));
+  const previousCount = FRAME_COUNT;
+  FRAME_COUNT = safeCount;
+  frames = Array.from({ length: FRAME_COUNT }, (_, index) => frames[index] || null);
+  subtitles = Array.from({ length: FRAME_COUNT }, (_, index) => subtitles[index] || createDefaultSubtitle(index));
+  frameNarrationAudios = Array.from({ length: FRAME_COUNT }, (_, index) => frameNarrationAudios[index] || null);
+  frameNarrationAudioUrls = Array.from({ length: FRAME_COUNT }, (_, index) => frameNarrationAudioUrls[index] || "");
+  frameDurations = Array.from({ length: FRAME_COUNT }, (_, index) => frameDurations[index] || FRAME_SECONDS);
+  currentPreviewIndex = Math.min(currentPreviewIndex, FRAME_COUNT - 1);
+  if (previousCount !== FRAME_COUNT && !options.silent) {
+    clearDownloadReady();
+    clearNarrationCache();
+    progressFill.style.width = "0";
+    if (!options.preserveStory) {
+      hasGeneratedScript = false;
+      subtitles = Array.from({ length: FRAME_COUNT }, (_, index) => createDefaultSubtitle(index));
+    }
+    manualUploadStatus.textContent = `Duration set to ${getSelectedDuration()} seconds. Upload ${FRAME_COUNT} images.`;
+  }
 }
 
 function applyVideoFormat() {
@@ -296,6 +389,7 @@ function setGuideStep(step) {
   if (stageActions) stageActions.hidden = guideStep < 4;
   if (playBtn) playBtn.hidden = guideStep < 4;
   updateScriptPanelVisibility();
+  renderUploadGuide();
   updateGuideNav();
 
   wizardStepButtons.forEach(button => {
@@ -315,7 +409,7 @@ function updateGuideNav() {
   guideNextBtn.textContent = {
     1: "Next: Script",
     2: "Next: Images",
-    3: frames.filter(Boolean).length === FRAME_COUNT ? "Next: Preview" : "Upload 4 Images",
+    3: frames.filter(Boolean).length === FRAME_COUNT ? "Next: Preview" : `Upload ${FRAME_COUNT} Images`,
     4: renderedVideoUrl ? "Next: Finish" : "Generate Video",
     5: "Download MP4"
   }[guideStep] || "Next";
@@ -335,8 +429,8 @@ function getGuideText() {
   const totalSeconds = Math.round(getTotalDuration());
   return {
     1: "Step 1: choose niche, enter title, then continue.",
-    2: "Step 2: generate script, review it, then use script.",
-    3: "Step 3: upload exactly 4 images for the 4 frames.",
+    2: `Step 2: generate ${FRAME_COUNT} script frames for a ${getSelectedDuration()}s video.`,
+    3: `Step 3: upload exactly ${FRAME_COUNT} images. Image 1 matches Script 1, Image 2 matches Script 2.`,
     4: `Step 4: preview the ${totalSeconds}s video, then generate video.`,
     5: `Step 5: video ready. Click Download MP4 to save the ${totalSeconds}s video.`
   }[guideStep] || "";
@@ -429,6 +523,33 @@ function renderScriptPopupList() {
   });
 }
 
+function renderUploadGuide(activeIndex = -1) {
+  if (!uploadGuideGrid) return;
+  uploadGuideGrid.innerHTML = "";
+  uploadGuideGrid.hidden = guideStep !== 3;
+  subtitles.forEach((text, index) => {
+    const frame = frames[index];
+    const card = document.createElement("article");
+    card.className = `upload-guide-card ${frame ? "ready" : ""} ${activeIndex === index ? "active" : ""}`;
+    card.innerHTML = `
+      <div class="upload-guide-head">
+        <strong>Image ${index + 1}</strong>
+        <span>${formatTime(getFrameStart(index))}-${formatTime(getFrameStart(index) + (frameDurations[index] || FRAME_SECONDS))}</span>
+      </div>
+      <p>${text || createDefaultSubtitle(index)}</p>
+      <small>${frame ? "Image ready" : `Upload image for Script ${index + 1}`}</small>
+    `;
+    if (frame) {
+      const image = document.createElement("img");
+      image.src = frame.url;
+      image.alt = frame.name || `Frame ${index + 1}`;
+      card.prepend(image);
+      card.addEventListener("click", () => openFrameLightbox(index));
+    }
+    uploadGuideGrid.append(card);
+  });
+}
+
 function openScriptPopup() {
   if (!scriptPopup) return;
   renderScriptPopupList();
@@ -460,7 +581,10 @@ function openUploadPopup() {
   if (!uploadPopup) return;
   if (popupFramesInput) popupFramesInput.value = "";
   if (popupUploadThumbs) popupUploadThumbs.innerHTML = "";
-  if (popupUploadStatus) popupUploadStatus.textContent = "No images selected.";
+  if (popupUploadStatus) popupUploadStatus.textContent = `No images selected. Need ${FRAME_COUNT}.`;
+  if (uploadPopupTitle) uploadPopupTitle.textContent = `Upload ${FRAME_COUNT} Story Images`;
+  if (popupUploadButtonText) popupUploadButtonText.textContent = `Choose ${FRAME_COUNT} Images`;
+  if (uploadPopupIntro) uploadPopupIntro.textContent = `Choose exactly ${FRAME_COUNT} images. Image 1 matches Script 1, Image 2 matches Script 2, and so on.`;
   if (popupUploadOk) popupUploadOk.disabled = true;
   uploadPopup.hidden = false;
 }
@@ -589,6 +713,18 @@ function buildGenerationDescription() {
 function syncUi() {
   const count = frames.filter(Boolean).length;
   if (readyCount) readyCount.textContent = `${count}/${FRAME_COUNT}`;
+  if (manualUploadTitle) manualUploadTitle.textContent = `Upload ${FRAME_COUNT} Story Images`;
+  if (manualUploadButtonText) manualUploadButtonText.textContent = `Upload ${FRAME_COUNT} Images`;
+  if (manualUploadStatus) {
+    manualUploadStatus.textContent = count === FRAME_COUNT
+      ? `${FRAME_COUNT} images ready. Continue to Preview.`
+      : `Upload one image for each script frame. ${count}/${FRAME_COUNT} ready.`;
+  }
+  if (emptyStateTitle) emptyStateTitle.textContent = `Upload ${FRAME_COUNT} frames`;
+  if (emptyStateDetail) {
+    emptyStateDetail.textContent = `${getSelectedDuration()}s video: one image per script frame, synced with subtitles and voice.`;
+  }
+  if (generateImagesBtn) generateImagesBtn.textContent = `Generate ${FRAME_COUNT} Images`;
   emptyState.hidden = count > 0;
   exportBtn.disabled = count !== FRAME_COUNT || isRendering || Boolean(renderedVideoUrl);
   exportBtn.hidden = Boolean(renderedVideoUrl);
@@ -605,6 +741,7 @@ function syncUi() {
   previewTitle.textContent = videoTitle.value || "Untitled Story";
   if (runtimeValue) runtimeValue.textContent = `${Math.round(getTotalDuration())}s`;
   updateScriptPanelVisibility();
+  renderUploadGuide();
 }
 
 async function checkApiStatus() {
@@ -859,7 +996,9 @@ async function generateStory(options = {}) {
     if (!userDescription && result.description && !String(result.description).startsWith("Niche:")) {
       storyIdea.value = result.description;
     }
-    subtitles = result.frames.map(frame => cleanNarrationText(String(frame)));
+    subtitles = Array.from({ length: FRAME_COUNT }, (_, index) =>
+      cleanNarrationText(String(result.frames[index] || createDefaultSubtitle(index)))
+    );
     hasGeneratedScript = true;
     apiStatus.textContent = "AI frame script ready.";
     voiceStatus.textContent = "Script ready. Click Hear Script to preview voice.";
@@ -968,16 +1107,17 @@ function closeLightbox() {
 function generateLocalStory() {
   const idea = buildGenerationDescription() || "a simple cinematic journey from mystery to a hopeful ending";
   const cleaned = idea.replace(/[.!?]+$/g, "");
-  const beats = scriptLanguage.value === "malay"
-    ? [
-      fitNarrationWords(`${cleaned} bermula perlahan apabila satu tanda pelik muncul di hadapannya.`),
-      "Akhirnya pilihan berani itu menghidupkan semula harapan seluruh tempat."
-    ]
-    : [
-      fitNarrationWords(`${cleaned} begins quietly when one strange sign appears before the hero.`),
-      "By the end, that brave choice restores hope across everything."
-    ];
-  subtitles = beats.slice(0, FRAME_COUNT);
+  const intro = scriptLanguage.value === "malay"
+    ? fitNarrationWords(`${cleaned} bermula dengan satu tanda pelik.`)
+    : fitNarrationWords(`${cleaned} begins with one strange sign.`);
+  const ending = scriptLanguage.value === "malay"
+    ? "Akhirnya jawapan itu mengubah semuanya."
+    : "At last, the answer changes everything.";
+  subtitles = Array.from({ length: FRAME_COUNT }, (_, index) => {
+    if (index === 0) return intro;
+    if (index === FRAME_COUNT - 1) return ending;
+    return fitNarrationWords(createDefaultSubtitle(index));
+  });
 }
 
 function fitNarrationWords(text) {
@@ -1038,6 +1178,7 @@ async function regenerateFrameScript(index) {
     renderScriptList();
     drawScene(index, 0.35);
     renderFrameSlots(index);
+    renderUploadGuide(index);
     voiceStatus.textContent = `Frame ${index + 1} script regenerated.`;
   } catch (error) {
     subtitles[index] = previousText;
@@ -1174,7 +1315,7 @@ async function generateImageWithRetry(index, stepIndex, referenceFrame) {
       setProcess(
         stepIndex,
         `Generating image ${index + 1} of ${FRAME_COUNT}${referenceLabel}... attempt ${attempt}/${MAX_IMAGE_RETRIES}`,
-        18 + index * 18 + (attempt - 1) * 3
+        18 + (index / FRAME_COUNT) * 70 + (attempt - 1) * 2
       );
       const response = await fetch("/api/generate-image", {
         method: "POST",
@@ -1209,7 +1350,7 @@ async function generateImageWithRetry(index, stepIndex, referenceFrame) {
         setProcess(
           stepIndex,
           `Image ${index + 1} failed. Retrying ${attempt + 1}/${MAX_IMAGE_RETRIES}${referenceFrame ? " with reference" : ""}...`,
-          18 + index * 18 + attempt * 3
+          18 + (index / FRAME_COUNT) * 70 + attempt * 2
         );
         await wait(1200 * attempt);
       }
@@ -1276,8 +1417,9 @@ async function handleManualUpload(event) {
     clearNarrationCache();
     clearDownloadReady();
     progressFill.style.width = "0";
-    manualUploadStatus.textContent = `${FRAME_COUNT} images loaded. Generate or edit script and voice next.`;
+    manualUploadStatus.textContent = `${FRAME_COUNT} images loaded. Continue to Preview.`;
     renderFrameSlots(0);
+    renderUploadGuide(0);
     syncUi();
     drawScene(0, 0.35);
     setGuideStep(4);

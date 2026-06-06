@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       `Return ONLY valid JSON like {"title":"string","description":"string","frames":["line1","line2","line3","line4"]}.`,
       `Write every narration line in ${languageName} only.`,
       `Each line must be 60 characters or fewer and complete.`,
-      `Use this arc: opening hook, problem/discovery, choice/action, visual payoff.`,
+      `Use a continuous arc across all ${frameCount} frames: hook, setup, discovery, escalation, choice, payoff, ending.`,
       `Keep same main character and visual setting across all frames.`,
       `No numbering inside subtitles. No markdown.`,
       `Selected niche: ${niche}`,

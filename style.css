@@ -479,6 +479,69 @@ small {
   pointer-events: none;
 }
 
+.upload-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: -4px 0 16px;
+}
+
+.upload-guide-card {
+  min-height: 156px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 12px;
+  box-shadow: var(--soft-shadow);
+  animation: riseIn 0.38s ease both;
+}
+
+.upload-guide-card.ready {
+  border-color: rgba(15, 143, 141, 0.42);
+  background: linear-gradient(180deg, #f0fbf8, #ffffff);
+  cursor: zoom-in;
+}
+
+.upload-guide-card.active {
+  border-color: var(--coral);
+}
+
+.upload-guide-card img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #dfe7ed;
+}
+
+.upload-guide-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.upload-guide-head strong {
+  font-size: 13px;
+}
+
+.upload-guide-head span,
+.upload-guide-card small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.upload-guide-card p {
+  min-height: 42px;
+  color: #263543;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .process-panel {
   position: fixed;
   top: 18px;
@@ -1046,7 +1109,7 @@ canvas {
 
 .frames-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(74px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
   gap: 8px;
 }
 
@@ -1263,7 +1326,7 @@ canvas {
 
 .popup-upload-thumbs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 8px;
   margin-top: 12px;
 }
@@ -1314,7 +1377,7 @@ canvas {
 
 .script-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 
