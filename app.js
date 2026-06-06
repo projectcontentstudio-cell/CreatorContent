@@ -286,9 +286,7 @@ async function handleGuideNext() {
     if (frames.filter(Boolean).length === FRAME_COUNT) await exportVideo();
     return;
   }
-  if (guideStep === 5 && renderedVideoUrl) {
-    downloadLink.click();
-  }
+  if (guideStep === 5 && renderedVideoUrl) return;
 }
 
 function setGuideStep(step) {
@@ -1503,7 +1501,6 @@ function speakAll() {
 
 async function exportVideo() {
   if (renderedVideoUrl) {
-    downloadLink.click();
     return;
   }
   if (frames.filter(Boolean).length !== FRAME_COUNT || isRendering) return;
@@ -1562,8 +1559,7 @@ async function exportVideo() {
     downloadLink.hidden = false;
     downloadLink.textContent = isMp4 ? "Download MP4" : "Download video";
     downloadLink.download = `${slugify(videoTitle.value || "storyframe-video")}.${isMp4 ? "mp4" : "webm"}`;
-    setProcess(4, isMp4 ? "MP4 ready. Starting download..." : "Browser saved WebM fallback. Starting download...", 100);
-    downloadLink.click();
+    setProcess(4, isMp4 ? "MP4 ready. Click Download MP4 when you want to save it." : "Video ready. Click Download video when you want to save it.", 100);
     setGuideStep(5);
     setTimeout(() => {
       hideProcessUi();
