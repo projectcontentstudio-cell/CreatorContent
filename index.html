@@ -176,28 +176,6 @@
         </div>
         </details>
 
-        <div class="status-card">
-          <div>
-            <span id="readyCount">0/4</span>
-            <small>frames ready</small>
-          </div>
-          <div>
-            <span id="runtimeValue">20s</span>
-            <small>runtime</small>
-          </div>
-          <div>
-            <span>480p</span>
-            <small>video export</small>
-          </div>
-        </div>
-
-        <div class="plan-card">
-          <div>
-            <span>Creator Plan</span>
-            <strong>RM29.90/mo</strong>
-          </div>
-          <small>Script, voice, prompts, manual frames, and export workspace.</small>
-        </div>
       </aside>
 
       <section class="stage-panel">
@@ -208,7 +186,6 @@
           </div>
           <div class="transport">
             <button id="playBtn" class="icon-btn" type="button" title="Preview">Play</button>
-            <button id="exportBtn" class="primary-btn" type="button">Download MP4</button>
           </div>
         </div>
 
@@ -222,7 +199,7 @@
             <button id="generateStoryBtn" class="secondary-btn" type="button">Generate Script</button>
             <button id="hearScriptBtn" class="ghost-btn" type="button">Hear Script</button>
             <button id="promptBtn" class="ghost-btn" type="button">Copy ChatGPT Image Prompts</button>
-            <a class="ghost-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">Open ChatGPT</a>
+            <a class="ghost-link" href="https://chatgpt.com/" rel="noreferrer">Open ChatGPT</a>
             <button id="generateImagesBtn" class="primary-btn" type="button" hidden>Generate 4 Images</button>
           </div>
         </div>
@@ -256,6 +233,8 @@
 
         <div class="preview-frame">
           <canvas id="videoCanvas" width="1280" height="720"></canvas>
+          <button id="previewPrevBtn" class="preview-arrow preview-arrow-left" type="button" aria-label="Previous image">‹</button>
+          <button id="previewNextBtn" class="preview-arrow preview-arrow-right" type="button" aria-label="Next image">›</button>
           <button id="previewProgressBadge" class="preview-progress-badge" type="button" hidden>Loading 0%</button>
           <div id="emptyState" class="empty-state">
             <strong>Upload 4 frames</strong>
@@ -267,20 +246,18 @@
           <div id="progressFill"></div>
         </div>
 
-        <div id="framesGrid" class="frames-grid"></div>
+        <div id="framesGrid" class="frames-grid" hidden></div>
+
+        <div class="stage-actions">
+          <button id="openScriptPopupBtn" class="secondary-btn compact-action" type="button">Open Script</button>
+          <button id="exportBtn" class="primary-btn" type="button">Download MP4</button>
+          <a id="downloadLink" class="download-link" download="storyframe-video.mp4">Download ready</a>
+        </div>
       </section>
     </section>
 
-    <section class="script-panel">
-      <div class="script-heading">
-        <div>
-          <h2>Frame Narration</h2>
-          <p>Generate this first, review it, then create the images. Each row is one 5-second story beat.</p>
-        </div>
-        <button id="openScriptPopupBtn" class="secondary-btn compact-action" type="button">Open Script</button>
-        <a id="downloadLink" class="download-link" download="storyframe-video.mp4">Download ready</a>
-      </div>
-      <div id="scriptList" class="script-list"></div>
+    <section class="script-panel script-panel-compact">
+      <div id="scriptList" class="script-list" hidden></div>
       <pre id="promptOutput" class="prompt-output" hidden></pre>
     </section>
   </main>

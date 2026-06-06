@@ -35,6 +35,8 @@ const previewMeta = document.querySelector("#previewMeta");
 const canvas = document.querySelector("#videoCanvas");
 const ctx = canvas.getContext("2d");
 const emptyState = document.querySelector("#emptyState");
+const previewPrevBtn = document.querySelector("#previewPrevBtn");
+const previewNextBtn = document.querySelector("#previewNextBtn");
 const framesGrid = document.querySelector("#framesGrid");
 const scriptList = document.querySelector("#scriptList");
 const progressFill = document.querySelector("#progressFill");
@@ -154,6 +156,8 @@ function init() {
     updatePreviewProgressBadge();
   });
   canvas.addEventListener("click", () => openFrameLightbox(currentPreviewIndex));
+  if (previewPrevBtn) previewPrevBtn.addEventListener("click", () => stepPreviewFrame(-1));
+  if (previewNextBtn) previewNextBtn.addEventListener("click", () => stepPreviewFrame(1));
   if (previewProgressBadge) previewProgressBadge.addEventListener("click", () => {
     processWasClosed = false;
     processPanel.hidden = false;
@@ -224,6 +228,7 @@ function applyVideoFormat() {
 }
 
 function renderFrameSlots(activeIndex = -1) {
+  if (!framesGrid) return;
   framesGrid.innerHTML = "";
   frames.forEach((frame, index) => {
     const slot = document.createElement("div");
@@ -250,6 +255,7 @@ function renderFrameSlots(activeIndex = -1) {
 }
 
 function renderScriptList() {
+  if (!scriptList) return;
   scriptList.innerHTML = "";
   subtitles.forEach((text, index) => {
     const card = document.createElement("article");
@@ -296,6 +302,22 @@ function openScriptPopup() {
   if (!scriptPopup) return;
   renderScriptPopupList();
   scriptPopup.hidden = false;
+}
+
+function stepPreviewFrame(direction) {
+  const readyIndexes = frames
+    .map((frame, index) => frame ? index : -1)
+    .filter(index => index >= 0);
+  if (!readyIndexes.length) return;
+  const currentPosition = readyIndexes.includes(currentPreviewIndex)
+    ? readyIndexes.indexOf(currentPreviewIndex)
+    : 0;
+  const nextPosition = (currentPosition + direction + readyIndexes.length) % readyIndexes.length;
+  const nextIndex = readyIndexes[nextPosition];
+  stopPreview();
+  drawScene(nextIndex, 0.35);
+  renderFrameSlots(nextIndex);
+  progressFill.style.width = `${Math.round((nextIndex / Math.max(1, FRAME_COUNT - 1)) * 100)}%`;
 }
 
 function closeScriptPopup() {
@@ -381,7 +403,7 @@ function buildGenerationDescription() {
 
 function syncUi() {
   const count = frames.filter(Boolean).length;
-  readyCount.textContent = `${count}/${FRAME_COUNT}`;
+  if (readyCount) readyCount.textContent = `${count}/${FRAME_COUNT}`;
   emptyState.hidden = count > 0;
   exportBtn.disabled = count !== FRAME_COUNT || isRendering;
   exportBtn.hidden = count !== FRAME_COUNT || isRendering;

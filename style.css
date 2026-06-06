@@ -763,6 +763,37 @@ canvas {
   cursor: zoom-in;
 }
 
+.preview-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 58px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 8px;
+  background: rgba(9, 17, 23, 0.62);
+  color: #fff;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(-50%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+.preview-arrow-left {
+  left: 12px;
+}
+
+.preview-arrow-right {
+  right: 12px;
+}
+
+.preview-arrow:hover {
+  background: rgba(15, 139, 141, 0.82);
+}
+
 .preview-progress-badge {
   position: absolute;
   right: 12px;
@@ -824,6 +855,14 @@ canvas {
   display: grid;
   grid-template-columns: repeat(8, minmax(74px, 1fr));
   gap: 8px;
+}
+
+.stage-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .thumb {
@@ -998,6 +1037,10 @@ canvas {
   margin-top: 18px;
   border-radius: 8px;
   padding: 18px;
+}
+
+.script-panel-compact {
+  display: none;
 }
 
 .download-link {
