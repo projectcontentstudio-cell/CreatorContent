@@ -67,6 +67,7 @@ const popupUploadStatus = document.querySelector("#popupUploadStatus");
 const popupUploadThumbs = document.querySelector("#popupUploadThumbs");
 const popupUploadOk = document.querySelector("#popupUploadOk");
 const controlPanel = document.querySelector(".control-panel");
+const stagePanel = document.querySelector(".stage-panel");
 const topGenerator = document.querySelector(".top-generator");
 const manualUploadBar = document.querySelector(".manual-upload-bar");
 const previewFrame = document.querySelector(".preview-frame");
@@ -287,6 +288,7 @@ function setGuideStep(step) {
   document.body.classList.toggle("guide-wide", guideStep > 1);
 
   if (controlPanel) controlPanel.hidden = guideStep !== 1;
+  if (stagePanel) stagePanel.hidden = guideStep === 1;
   if (topGenerator) topGenerator.hidden = guideStep !== 2;
   if (manualUploadBar) manualUploadBar.hidden = guideStep !== 3;
   if (previewFrame) previewFrame.hidden = guideStep < 4;
