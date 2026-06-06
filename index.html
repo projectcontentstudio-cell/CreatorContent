@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StoryFrame Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="workspace">
+      <aside class="control-panel">
+        <div class="brand-row">
+          <div class="brand-mark">SF</div>
+          <div>
+            <h1>StoryFrame Studio</h1>
+            <p>Pick a niche, add an idea, then generate a short faceless video.</p>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-label">
+            <span>1</span>
+            <strong>Choose niche</strong>
+          </div>
+          <div class="niche-grid" role="radiogroup" aria-label="Content niche">
+            <label>
+              <input type="radio" name="contentNiche" value="scary" checked>
+              <span>Seram</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="facts">
+              <span>Fakta</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="history">
+              <span>History</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="motivation">
+              <span>Motivasi</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="kids">
+              <span>Kids</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="anime">
+              <span>Anime</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="islamic">
+              <span>Islamic</span>
+            </label>
+            <label>
+              <input type="radio" name="contentNiche" value="drama">
+              <span>Drama</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-label">
+            <span>2</span>
+            <strong>Content idea</strong>
+          </div>
+        <div class="field-group first-field">
+          <label for="videoTitle">Video title</label>
+          <input id="videoTitle" type="text" value="Cerita Seram 20 Saat" placeholder="Example: Robot Garden">
+        </div>
+
+        <div class="field-group">
+          <label for="storyIdea">Description</label>
+          <textarea id="storyIdea" rows="4" placeholder="Optional. If empty, AI will create the story idea from title and niche."></textarea>
+        </div>
+        </div>
+
+        <details class="advanced-settings">
+          <summary>Advanced settings</summary>
+        <div class="field-group">
+          <span class="control-label">AI provider</span>
+          <div class="tick-choice two-choice" role="radiogroup" aria-label="AI provider">
+            <label>
+              <input type="radio" name="aiProvider" value="google" checked>
+              <span>Google</span>
+            </label>
+            <label>
+              <input type="radio" name="aiProvider" value="openai">
+              <span>OpenAI</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label>
+            Format
+            <select id="videoFormat">
+              <option value="portrait">Portrait 9:16</option>
+              <option value="landscape">Landscape 16:9</option>
+            </select>
+          </label>
+          <label>
+            Language
+            <select id="scriptLanguage">
+              <option value="english">English</option>
+              <option value="malay" selected>Malay</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label>
+            Voice style
+            <select id="voiceStyle">
+              <option value="warm">Warm</option>
+              <option value="bright">Bright</option>
+              <option value="calm">Calm</option>
+            </select>
+          </label>
+          <label>
+            Voice type
+            <select id="geminiVoice">
+              <option value="Zephyr">Zephyr - Bright</option>
+              <option value="Puck">Puck - Upbeat</option>
+              <option value="Charon">Charon - Informative</option>
+              <option value="Kore">Kore - Firm</option>
+              <option value="Fenrir">Fenrir - Excitable</option>
+              <option value="Leda">Leda - Youthful</option>
+              <option value="Orus">Orus - Firm</option>
+              <option value="Aoede">Aoede - Breezy</option>
+              <option value="Callirrhoe">Callirrhoe - Easy-going</option>
+              <option value="Autonoe">Autonoe - Bright</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="field-group">
+          <span class="control-label">Voice provider</span>
+          <div class="tick-choice" role="radiogroup" aria-label="Voice provider">
+            <label>
+              <input type="radio" name="voiceProvider" value="elevenlabs" checked>
+              <span>ElevenLabs</span>
+            </label>
+            <label>
+              <input type="radio" name="voiceProvider" value="google">
+              <span>Google</span>
+            </label>
+            <label>
+              <input type="radio" name="voiceProvider" value="browser">
+              <span>Browser</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label>
+            Motion
+            <select id="motionStyle">
+              <option value="auto" selected>Auto director</option>
+              <option value="cinematic">Cinematic cut</option>
+              <option value="zoom-in">Zoom in</option>
+              <option value="zoom-out">Zoom out</option>
+              <option value="pan">Pan and zoom</option>
+            </select>
+          </label>
+          <label>
+            Subtitle
+            <select id="subtitleStyle">
+              <option value="clean" selected>Clean white text</option>
+              <option value="strong">Strong white text</option>
+            </select>
+          </label>
+        </div>
+        </details>
+
+        <div class="status-card">
+          <div>
+            <span id="readyCount">0/4</span>
+            <small>frames ready</small>
+          </div>
+          <div>
+            <span id="runtimeValue">20s</span>
+            <small>runtime</small>
+          </div>
+          <div>
+            <span>480p</span>
+            <small>video export</small>
+          </div>
+        </div>
+
+        <div class="plan-card">
+          <div>
+            <span>Creator Plan</span>
+            <strong>RM29.90/mo</strong>
+          </div>
+          <small>Script, voice, prompts, manual frames, and export workspace.</small>
+        </div>
+      </aside>
+
+      <section class="stage-panel">
+        <div class="preview-topbar">
+          <div>
+            <h2 id="previewTitle">Cerita Seram 20 Saat</h2>
+            <p id="previewMeta">Enter title and description, then auto-generate the frames.</p>
+          </div>
+          <div class="transport">
+            <button id="playBtn" class="icon-btn" type="button" title="Preview">Play</button>
+            <button id="exportBtn" class="primary-btn" type="button">Download MP4</button>
+          </div>
+        </div>
+
+        <div class="api-box stage-api-box top-generator">
+          <div>
+            <strong>Script + Voice Generator</strong>
+            <small id="apiStatus">Checking local server...</small>
+            <small id="voiceStatus">Browser voice selected.</small>
+          </div>
+          <div class="generator-actions">
+            <button id="generateStoryBtn" class="secondary-btn" type="button">Generate Script</button>
+            <button id="hearScriptBtn" class="ghost-btn" type="button">Hear Script</button>
+            <button id="promptBtn" class="ghost-btn" type="button">Copy ChatGPT Image Prompts</button>
+            <a class="ghost-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">Open ChatGPT</a>
+            <button id="generateImagesBtn" class="primary-btn" type="button" hidden>Generate 4 Images</button>
+          </div>
+        </div>
+
+        <div class="manual-upload-bar">
+          <div>
+            <strong>Manual Upload</strong>
+            <small id="manualUploadStatus">Upload 4 images to use your own frames.</small>
+          </div>
+          <label class="manual-upload-button">
+            <input id="manualFramesInput" type="file" accept="image/*" multiple>
+            <span>Upload 4 Images</span>
+          </label>
+        </div>
+
+        <div id="processPanel" class="process-panel" hidden>
+          <div class="process-head">
+            <div>
+              <strong id="processTitle">Generating</strong>
+              <small id="processDetail">Preparing request...</small>
+            </div>
+            <span id="processLabel" class="process-label">Loading</span>
+            <span id="processPercent">0%</span>
+            <button id="processClose" class="process-close" type="button" aria-label="Close loading popup">x</button>
+          </div>
+          <div class="process-bar">
+            <div id="processFill"></div>
+          </div>
+          <div id="processSteps" class="process-steps" hidden></div>
+        </div>
+
+        <div class="preview-frame">
+          <canvas id="videoCanvas" width="1280" height="720"></canvas>
+          <button id="previewProgressBadge" class="preview-progress-badge" type="button" hidden>Loading 0%</button>
+          <div id="emptyState" class="empty-state">
+            <strong>Upload 4 frames</strong>
+            <span>The final video renders here with zoom/cut motion, 5-second narration, and voice timing.</span>
+          </div>
+        </div>
+
+        <div class="progress-shell">
+          <div id="progressFill"></div>
+        </div>
+
+        <div id="framesGrid" class="frames-grid"></div>
+      </section>
+    </section>
+
+    <section class="script-panel">
+      <div class="script-heading">
+        <div>
+          <h2>Frame Narration</h2>
+          <p>Generate this first, review it, then create the images. Each row is one 5-second story beat.</p>
+        </div>
+        <button id="openScriptPopupBtn" class="secondary-btn compact-action" type="button">Open Script</button>
+        <a id="downloadLink" class="download-link" download="storyframe-video.mp4">Download ready</a>
+      </div>
+      <div id="scriptList" class="script-list"></div>
+      <pre id="promptOutput" class="prompt-output" hidden></pre>
+    </section>
+  </main>
+
+  <div id="imageLightbox" class="image-lightbox" hidden>
+    <button id="lightboxClose" class="lightbox-close" type="button" aria-label="Close image preview">x</button>
+    <img id="lightboxImage" alt="Large generated frame">
+  </div>
+
+  <div id="scriptPopup" class="script-popup" hidden>
+    <div class="script-popup-card">
+      <button id="scriptPopupClose" class="lightbox-close" type="button" aria-label="Close script popup">x</button>
+      <header>
+        <div>
+          <h2>Frame Script</h2>
+          <p>Review or edit the 4 story beats before generating images.</p>
+        </div>
+      </header>
+      <div id="scriptPopupList" class="script-popup-list"></div>
+      <div class="script-popup-actions">
+        <button id="popupRegenerateScript" class="secondary-btn" type="button">Regenerate Script</button>
+        <button id="popupUseScript" class="primary-btn" type="button">Use Script</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="promptPopup" class="prompt-popup" hidden>
+    <div class="prompt-popup-card">
+      <button id="promptPopupClose" class="lightbox-close" type="button" aria-label="Close image prompts">x</button>
+      <header>
+        <div>
+          <h2>ChatGPT Image Prompts</h2>
+          <p>Review the 4 prompts first, then copy and paste them into ChatGPT.</p>
+        </div>
+      </header>
+      <textarea id="promptPopupText" class="prompt-popup-text" aria-label="ChatGPT image prompts"></textarea>
+      <div class="script-popup-actions">
+        <button id="promptPopupCopy" class="secondary-btn" type="button">Copy Prompts</button>
+        <a class="ghost-link popup-chatgpt-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">Open ChatGPT</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
