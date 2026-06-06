@@ -10,6 +10,7 @@ const generateStoryBtn = document.querySelector("#generateStoryBtn");
 const hearScriptBtn = document.querySelector("#hearScriptBtn");
 const promptBtn = document.querySelector("#promptBtn");
 const generateImagesBtn = document.querySelector("#generateImagesBtn");
+const continueToScriptBtn = document.querySelector("#continueToScriptBtn");
 const manualFramesInput = document.querySelector("#manualFramesInput");
 const manualUploadStatus = document.querySelector("#manualUploadStatus");
 const playBtn = document.querySelector("#playBtn");
@@ -70,6 +71,15 @@ const popupFramesInput = document.querySelector("#popupFramesInput");
 const popupUploadStatus = document.querySelector("#popupUploadStatus");
 const popupUploadThumbs = document.querySelector("#popupUploadThumbs");
 const popupUploadOk = document.querySelector("#popupUploadOk");
+const controlPanel = document.querySelector(".control-panel");
+const topGenerator = document.querySelector(".top-generator");
+const manualUploadBar = document.querySelector(".manual-upload-bar");
+const previewFrame = document.querySelector(".preview-frame");
+const progressShell = document.querySelector(".progress-shell");
+const stageActions = document.querySelector(".stage-actions");
+const wizardStepButtons = document.querySelectorAll("[data-wizard-step]");
+const guideBackBtn = document.querySelector("#guideBackBtn");
+const guideNextBtn = document.querySelector("#guideNextBtn");
 
 let frames = Array(FRAME_COUNT).fill(null);
 let subtitles = [
@@ -90,6 +100,7 @@ let currentPreviewIndex = 0;
 let latestProcessPercent = 0;
 let processWasClosed = false;
 let renderedVideoUrl = "";
+let guideStep = 1;
 const nichePresets = {
   scary: {
     label: "Seram",
@@ -150,6 +161,9 @@ function init() {
   syncUi();
 
   if (generateStoryBtn) generateStoryBtn.addEventListener("click", generateStory);
+  if (continueToScriptBtn) continueToScriptBtn.addEventListener("click", () => setGuideStep(2));
+  if (guideBackBtn) guideBackBtn.addEventListener("click", () => setGuideStep(Math.max(1, guideStep - 1)));
+  if (guideNextBtn) guideNextBtn.addEventListener("click", handleGuideNext);
   if (hearScriptBtn) hearScriptBtn.addEventListener("click", hearScript);
   if (promptBtn) promptBtn.addEventListener("click", copyChatGptImagePrompts);
   if (generateImagesBtn) generateImagesBtn.addEventListener("click", generateAiImages);
@@ -221,11 +235,18 @@ function init() {
   });
   motionStyle.addEventListener("change", () => drawScene(getCurrentFrameFromProgress(), 0.35));
   subtitleStyle.addEventListener("change", () => drawScene(getCurrentFrameFromProgress(), 0.35));
+  wizardStepButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const requestedStep = Number(button.dataset.wizardStep || 1);
+      if (canOpenGuideStep(requestedStep)) setGuideStep(requestedStep);
+    });
+  });
 
   if (new URLSearchParams(window.location.search).get("demo") === "1") {
     loadDemoFrames();
   }
   checkApiStatus();
+  setGuideStep(1);
 }
 
 function applyVideoFormat() {
@@ -238,6 +259,88 @@ function applyVideoFormat() {
   previewFrame.style.aspectRatio = `${WIDTH} / ${HEIGHT}`;
   previewFrame.classList.toggle("portrait-preview", isPortrait);
   previewFrame.classList.toggle("landscape-preview", !isPortrait);
+}
+
+function canOpenGuideStep(step) {
+  if (step <= 2) return true;
+  if (step === 3) return hasGeneratedScript;
+  if (step === 4) return frames.filter(Boolean).length === FRAME_COUNT;
+  if (step === 5) return Boolean(renderedVideoUrl);
+  return false;
+}
+
+async function handleGuideNext() {
+  if (guideStep === 1) {
+    setGuideStep(2);
+    return;
+  }
+  if (guideStep === 2) {
+    if (hasGeneratedScript) setGuideStep(3);
+    return;
+  }
+  if (guideStep === 3) {
+    if (frames.filter(Boolean).length === FRAME_COUNT) setGuideStep(4);
+    return;
+  }
+  if (guideStep === 4) {
+    if (frames.filter(Boolean).length === FRAME_COUNT) await exportVideo();
+    return;
+  }
+  if (guideStep === 5 && renderedVideoUrl) {
+    downloadLink.click();
+  }
+}
+
+function setGuideStep(step) {
+  const nextStep = Math.min(5, Math.max(1, Number(step) || 1));
+  guideStep = nextStep;
+  document.body.dataset.guideStep = String(guideStep);
+  document.body.classList.toggle("guide-wide", guideStep > 1);
+
+  if (controlPanel) controlPanel.hidden = guideStep !== 1;
+  if (topGenerator) topGenerator.hidden = guideStep !== 2;
+  if (manualUploadBar) manualUploadBar.hidden = guideStep !== 3;
+  if (previewFrame) previewFrame.hidden = guideStep < 4;
+  if (progressShell) progressShell.hidden = guideStep < 4;
+  if (stageActions) stageActions.hidden = guideStep < 4;
+  if (playBtn) playBtn.hidden = guideStep < 4;
+  updateGuideNav();
+
+  wizardStepButtons.forEach(button => {
+    const buttonStep = Number(button.dataset.wizardStep || 1);
+    button.classList.toggle("active", buttonStep === guideStep);
+    button.classList.toggle("done", canOpenGuideStep(buttonStep + 1) || buttonStep < guideStep);
+    button.disabled = !canOpenGuideStep(buttonStep);
+  });
+
+  previewMeta.textContent = getGuideText();
+}
+
+function updateGuideNav() {
+  if (guideBackBtn) guideBackBtn.disabled = guideStep <= 1;
+  if (!guideNextBtn) return;
+  guideNextBtn.hidden = false;
+  guideNextBtn.textContent = {
+    1: "Next: Script",
+    2: "Next: Images",
+    3: frames.filter(Boolean).length === FRAME_COUNT ? "Next: Preview" : "Upload 4 Images",
+    4: renderedVideoUrl ? "Next: Finish" : "Generate Video",
+    5: "Download MP4"
+  }[guideStep] || "Next";
+  guideNextBtn.disabled =
+    (guideStep === 2 && !hasGeneratedScript) ||
+    (guideStep === 3 && frames.filter(Boolean).length !== FRAME_COUNT) ||
+    (guideStep === 4 && frames.filter(Boolean).length !== FRAME_COUNT);
+}
+
+function getGuideText() {
+  return {
+    1: "Step 1: choose niche, enter title, then continue.",
+    2: "Step 2: generate script, review it, then use script.",
+    3: "Step 3: upload exactly 4 images for the 4 frames.",
+    4: "Step 4: preview the frames, then generate video.",
+    5: "Step 5: download your finished video."
+  }[guideStep] || "";
 }
 
 function renderFrameSlots(activeIndex = -1) {
@@ -405,6 +508,7 @@ function confirmPopupUpload() {
   progressFill.style.width = "0";
   drawScene(0, 0.35);
   syncUi();
+  setGuideStep(4);
 }
 
 function useScriptPopup() {
@@ -418,7 +522,7 @@ function useScriptPopup() {
   showPrompts(false);
   drawScene(0, 0.35);
   closeScriptPopup();
-  openUploadPopup();
+  setGuideStep(3);
 }
 
 function formatTime(seconds) {
@@ -496,11 +600,10 @@ function syncUi() {
       ? "Download MP4"
       : "Generate Video";
   playBtn.disabled = count === 0 || isRendering;
+  updateGuideNav();
   if (generateImagesBtn) generateImagesBtn.disabled = isRendering;
   if (hearScriptBtn) hearScriptBtn.disabled = isRendering || !hasGeneratedScript;
-  previewMeta.textContent = count === FRAME_COUNT
-    ? "Ready for one-click render with subtitles and voice."
-    : `Setup: ${getSelectedNichePreset().label}. Add idea or let AI create one.`;
+  previewMeta.textContent = getGuideText();
   previewTitle.textContent = videoTitle.value || "Untitled Story";
   if (runtimeValue) runtimeValue.textContent = `${Math.round(getTotalDuration())}s`;
 }
@@ -1275,6 +1378,7 @@ async function handleManualUpload(event) {
     renderFrameSlots(0);
     syncUi();
     drawScene(0, 0.35);
+    setGuideStep(4);
     setProcess(4, "Loading", 100);
     setTimeout(() => hideProcessUi(), 500);
   } catch (error) {
@@ -1460,6 +1564,7 @@ async function exportVideo() {
     downloadLink.download = `${slugify(videoTitle.value || "storyframe-video")}.${isMp4 ? "mp4" : "webm"}`;
     setProcess(4, isMp4 ? "MP4 ready. Starting download..." : "Browser saved WebM fallback. Starting download...", 100);
     downloadLink.click();
+    setGuideStep(5);
     setTimeout(() => {
       hideProcessUi();
     }, 900);

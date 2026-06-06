@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=flow-20260606">
+  <link rel="stylesheet" href="style.css?v=guide-final-20260606">
 </head>
 <body>
   <main class="app-shell">
@@ -76,6 +76,14 @@
           <label for="storyIdea">Description</label>
           <textarea id="storyIdea" rows="4" placeholder="Optional. If empty, AI will create the story idea from title and niche."></textarea>
         </div>
+        <div class="field-group">
+          <label for="scriptLanguage">Language</label>
+          <select id="scriptLanguage">
+            <option value="english">English</option>
+            <option value="malay" selected>Malay</option>
+          </select>
+        </div>
+        <button id="continueToScriptBtn" class="primary-btn full-action" type="button">Continue to Script</button>
         </div>
 
         <details class="advanced-settings">
@@ -94,19 +102,12 @@
           </div>
         </div>
 
-        <div class="field-row">
+        <div class="field-group">
           <label>
             Format
             <select id="videoFormat">
               <option value="portrait">Portrait 9:16</option>
               <option value="landscape">Landscape 16:9</option>
-            </select>
-          </label>
-          <label>
-            Language
-            <select id="scriptLanguage">
-              <option value="english">English</option>
-              <option value="malay" selected>Malay</option>
             </select>
           </label>
         </div>
@@ -189,6 +190,19 @@
           </div>
         </div>
 
+        <div class="wizard-steps" aria-label="Video creation steps">
+          <button type="button" data-wizard-step="1">1 Idea</button>
+          <button type="button" data-wizard-step="2">2 Script</button>
+          <button type="button" data-wizard-step="3">3 Images</button>
+          <button type="button" data-wizard-step="4">4 Preview</button>
+          <button type="button" data-wizard-step="5">5 Finish</button>
+        </div>
+
+        <div class="guide-nav">
+          <button id="guideBackBtn" class="ghost-btn" type="button">Back</button>
+          <button id="guideNextBtn" class="secondary-btn" type="button">Next</button>
+        </div>
+
         <div class="api-box stage-api-box top-generator">
           <div>
             <strong>Script + Voice Generator</strong>
@@ -198,8 +212,6 @@
           <div class="generator-actions">
             <button id="generateStoryBtn" class="secondary-btn" type="button">Generate Script</button>
             <button id="hearScriptBtn" class="ghost-btn" type="button">Hear Script</button>
-            <button id="promptBtn" class="ghost-btn" type="button">Copy ChatGPT Image Prompts</button>
-            <a class="ghost-link" href="https://chatgpt.com/" rel="noreferrer">Open ChatGPT</a>
             <button id="generateImagesBtn" class="primary-btn" type="button" hidden>Generate 4 Images</button>
           </div>
         </div>
@@ -249,7 +261,6 @@
         <div id="framesGrid" class="frames-grid" hidden></div>
 
         <div class="stage-actions">
-          <button id="openScriptPopupBtn" class="secondary-btn compact-action" type="button">Open Script</button>
           <button id="exportBtn" class="primary-btn" type="button">Generate Video</button>
           <a id="downloadLink" class="download-link" download="storyframe-video.mp4">Download ready</a>
         </div>
@@ -317,11 +328,10 @@
       <textarea id="promptPopupText" class="prompt-popup-text" aria-label="ChatGPT image prompts"></textarea>
       <div class="script-popup-actions">
         <button id="promptPopupCopy" class="secondary-btn" type="button">Copy Prompts</button>
-        <a class="ghost-link popup-chatgpt-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">Open ChatGPT</a>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=flow-20260606"></script>
+  <script src="app.js?v=guide-final-20260606"></script>
 </body>
 </html>

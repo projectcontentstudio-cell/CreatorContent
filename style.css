@@ -60,6 +60,10 @@ button:disabled {
   align-items: stretch;
 }
 
+.guide-wide .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .control-panel,
 .stage-panel,
 .script-panel {
@@ -154,6 +158,11 @@ small {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 12px;
+}
+
+.full-action {
+  width: 100%;
+  margin-top: 14px;
 }
 
 .setup-step {
@@ -720,6 +729,52 @@ button:disabled {
   padding: 18px;
 }
 
+.wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.wizard-steps button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafb;
+  color: #677483;
+  min-width: 0;
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: normal;
+}
+
+.wizard-steps button.active {
+  border-color: var(--accent);
+  background: #edf9f7;
+  color: var(--accent-strong);
+  box-shadow: inset 0 0 0 1px rgba(15, 139, 141, 0.28);
+}
+
+.wizard-steps button.done {
+  color: var(--ink);
+}
+
+.wizard-steps button:disabled {
+  opacity: 0.48;
+}
+
+.guide-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: -2px 0 14px;
+}
+
+.guide-nav button {
+  min-width: 132px;
+}
+
 .preview-topbar,
 .script-heading {
   display: flex;
@@ -1223,9 +1278,26 @@ canvas {
   .action-grid,
   .stage-api-box,
   .manual-upload-bar,
+  .guide-nav,
   .field-row {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .wizard-steps {
+    gap: 5px;
+  }
+
+  .wizard-steps button {
+    min-height: 38px;
+    padding: 0 4px;
+    font-size: 11px;
+    line-height: 1.05;
+  }
+
+  .guide-nav button {
+    min-width: 0;
+    width: 100%;
   }
 
   .icon-btn,
