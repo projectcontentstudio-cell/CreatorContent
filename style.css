@@ -1152,6 +1152,10 @@ canvas {
   display: none;
 }
 
+.script-panel-compact.visible {
+  display: block;
+}
+
 .download-link {
   display: none;
   border-radius: 8px;

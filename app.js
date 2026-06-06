@@ -72,6 +72,7 @@ const manualUploadBar = document.querySelector(".manual-upload-bar");
 const previewFrame = document.querySelector(".preview-frame");
 const progressShell = document.querySelector(".progress-shell");
 const stageActions = document.querySelector(".stage-actions");
+const scriptPanel = document.querySelector(".script-panel");
 const wizardStepButtons = document.querySelectorAll("[data-wizard-step]");
 const guideBackBtn = document.querySelector("#guideBackBtn");
 const guideNextBtn = document.querySelector("#guideNextBtn");
@@ -292,6 +293,7 @@ function setGuideStep(step) {
   if (progressShell) progressShell.hidden = guideStep < 4;
   if (stageActions) stageActions.hidden = guideStep < 4;
   if (playBtn) playBtn.hidden = guideStep < 4;
+  updateScriptPanelVisibility();
   updateGuideNav();
 
   wizardStepButtons.forEach(button => {
@@ -319,6 +321,12 @@ function updateGuideNav() {
     (guideStep === 2 && !hasGeneratedScript) ||
     (guideStep === 3 && frames.filter(Boolean).length !== FRAME_COUNT) ||
     (guideStep === 4 && frames.filter(Boolean).length !== FRAME_COUNT);
+}
+
+function updateScriptPanelVisibility() {
+  const shouldShowScriptPanel = guideStep === 2 && hasGeneratedScript;
+  if (scriptPanel) scriptPanel.classList.toggle("visible", shouldShowScriptPanel);
+  if (scriptList) scriptList.hidden = !shouldShowScriptPanel;
 }
 
 function getGuideText() {
@@ -510,7 +518,7 @@ function useScriptPopup() {
   renderScriptList();
   drawScene(0, 0.35);
   closeScriptPopup();
-  setGuideStep(3);
+  setGuideStep(2);
 }
 
 function formatTime(seconds) {
@@ -594,6 +602,7 @@ function syncUi() {
   previewMeta.textContent = getGuideText();
   previewTitle.textContent = videoTitle.value || "Untitled Story";
   if (runtimeValue) runtimeValue.textContent = `${Math.round(getTotalDuration())}s`;
+  updateScriptPanelVisibility();
 }
 
 async function checkApiStatus() {
