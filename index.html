@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=manual-download-20260606">
+  <link rel="stylesheet" href="style.css?v=download-polish-20260606">
 </head>
 <body>
   <main class="app-shell">
@@ -263,13 +263,13 @@
         <div class="stage-actions">
           <button id="exportBtn" class="primary-btn" type="button">Generate Video</button>
           <a id="downloadLink" class="download-link" download="storyframe-video.mp4">Download ready</a>
+          <small id="downloadStatus" class="download-status" hidden></small>
         </div>
       </section>
     </section>
 
     <section class="script-panel script-panel-compact">
       <div id="scriptList" class="script-list" hidden></div>
-      <pre id="promptOutput" class="prompt-output" hidden></pre>
     </section>
   </main>
 
@@ -316,22 +316,6 @@
     </div>
   </div>
 
-  <div id="promptPopup" class="prompt-popup" hidden>
-    <div class="prompt-popup-card">
-      <button id="promptPopupClose" class="lightbox-close" type="button" aria-label="Close image prompts">x</button>
-      <header>
-        <div>
-          <h2>ChatGPT Image Prompts</h2>
-          <p>Review the 4 prompts first, then copy and paste them into ChatGPT.</p>
-        </div>
-      </header>
-      <textarea id="promptPopupText" class="prompt-popup-text" aria-label="ChatGPT image prompts"></textarea>
-      <div class="script-popup-actions">
-        <button id="promptPopupCopy" class="secondary-btn" type="button">Copy Prompts</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js?v=manual-download-20260606"></script>
+  <script src="app.js?v=download-polish-20260606"></script>
 </body>
 </html>

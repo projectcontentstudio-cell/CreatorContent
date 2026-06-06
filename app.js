@@ -8,7 +8,6 @@ let HEIGHT = 854;
 
 const generateStoryBtn = document.querySelector("#generateStoryBtn");
 const hearScriptBtn = document.querySelector("#hearScriptBtn");
-const promptBtn = document.querySelector("#promptBtn");
 const generateImagesBtn = document.querySelector("#generateImagesBtn");
 const continueToScriptBtn = document.querySelector("#continueToScriptBtn");
 const manualFramesInput = document.querySelector("#manualFramesInput");
@@ -42,7 +41,7 @@ const framesGrid = document.querySelector("#framesGrid");
 const scriptList = document.querySelector("#scriptList");
 const progressFill = document.querySelector("#progressFill");
 const downloadLink = document.querySelector("#downloadLink");
-const promptOutput = document.querySelector("#promptOutput");
+const downloadStatus = document.querySelector("#downloadStatus");
 const processPanel = document.querySelector("#processPanel");
 const processTitle = document.querySelector("#processTitle");
 const processDetail = document.querySelector("#processDetail");
@@ -61,10 +60,6 @@ const scriptPopupClose = document.querySelector("#scriptPopupClose");
 const scriptPopupList = document.querySelector("#scriptPopupList");
 const popupRegenerateScript = document.querySelector("#popupRegenerateScript");
 const popupUseScript = document.querySelector("#popupUseScript");
-const promptPopup = document.querySelector("#promptPopup");
-const promptPopupClose = document.querySelector("#promptPopupClose");
-const promptPopupText = document.querySelector("#promptPopupText");
-const promptPopupCopy = document.querySelector("#promptPopupCopy");
 const uploadPopup = document.querySelector("#uploadPopup");
 const uploadPopupClose = document.querySelector("#uploadPopupClose");
 const popupFramesInput = document.querySelector("#popupFramesInput");
@@ -165,11 +160,11 @@ function init() {
   if (guideBackBtn) guideBackBtn.addEventListener("click", () => setGuideStep(Math.max(1, guideStep - 1)));
   if (guideNextBtn) guideNextBtn.addEventListener("click", handleGuideNext);
   if (hearScriptBtn) hearScriptBtn.addEventListener("click", hearScript);
-  if (promptBtn) promptBtn.addEventListener("click", copyChatGptImagePrompts);
   if (generateImagesBtn) generateImagesBtn.addEventListener("click", generateAiImages);
   if (manualFramesInput) manualFramesInput.addEventListener("change", handleManualUpload);
   playBtn.addEventListener("click", previewVideo);
   exportBtn.addEventListener("click", exportVideo);
+  downloadLink.addEventListener("click", markDownloadStarted);
   aiProviderInputs.forEach(input => input.addEventListener("change", checkApiStatus));
   if (processClose) processClose.addEventListener("click", () => {
     processWasClosed = true;
@@ -200,11 +195,6 @@ function init() {
   });
   if (popupFramesInput) popupFramesInput.addEventListener("change", handlePopupUpload);
   if (popupUploadOk) popupUploadOk.addEventListener("click", confirmPopupUpload);
-  if (promptPopupClose) promptPopupClose.addEventListener("click", closePromptPopup);
-  if (promptPopup) promptPopup.addEventListener("click", (event) => {
-    if (event.target === promptPopup) closePromptPopup();
-  });
-  if (promptPopupCopy) promptPopupCopy.addEventListener("click", copyPromptPopupText);
   if (popupRegenerateScript) popupRegenerateScript.addEventListener("click", async () => {
     popupRegenerateScript.textContent = "Writing...";
     popupRegenerateScript.disabled = true;
@@ -317,7 +307,7 @@ function setGuideStep(step) {
 function updateGuideNav() {
   if (guideBackBtn) guideBackBtn.disabled = guideStep <= 1;
   if (!guideNextBtn) return;
-  guideNextBtn.hidden = false;
+  guideNextBtn.hidden = guideStep === 5 && Boolean(renderedVideoUrl);
   guideNextBtn.textContent = {
     1: "Next: Script",
     2: "Next: Images",
@@ -332,12 +322,13 @@ function updateGuideNav() {
 }
 
 function getGuideText() {
+  const totalSeconds = Math.round(getTotalDuration());
   return {
     1: "Step 1: choose niche, enter title, then continue.",
     2: "Step 2: generate script, review it, then use script.",
     3: "Step 3: upload exactly 4 images for the 4 frames.",
-    4: "Step 4: preview the frames, then generate video.",
-    5: "Step 5: download your finished video."
+    4: `Step 4: preview the ${totalSeconds}s video, then generate video.`,
+    5: `Step 5: video ready. Click Download MP4 to save the ${totalSeconds}s video.`
   }[guideStep] || "";
 }
 
@@ -517,7 +508,6 @@ function useScriptPopup() {
   });
   hasGeneratedScript = true;
   renderScriptList();
-  showPrompts(false);
   drawScene(0, 0.35);
   closeScriptPopup();
   setGuideStep(3);
@@ -590,12 +580,12 @@ function syncUi() {
   const count = frames.filter(Boolean).length;
   if (readyCount) readyCount.textContent = `${count}/${FRAME_COUNT}`;
   emptyState.hidden = count > 0;
-  exportBtn.disabled = count !== FRAME_COUNT || isRendering;
-  exportBtn.hidden = false;
+  exportBtn.disabled = count !== FRAME_COUNT || isRendering || Boolean(renderedVideoUrl);
+  exportBtn.hidden = Boolean(renderedVideoUrl);
   exportBtn.textContent = isRendering
     ? "Rendering..."
     : renderedVideoUrl
-      ? "Download MP4"
+      ? "Video Ready"
       : "Generate Video";
   playBtn.disabled = count === 0 || isRendering;
   updateGuideNav();
@@ -874,7 +864,6 @@ async function generateStory(options = {}) {
       generateStoryBtn.disabled = false;
     }
     renderScriptList();
-    showPrompts(false);
     drawScene(0, 0.35);
     syncUi();
   }
@@ -1110,101 +1099,6 @@ function setFrameActionBusy(index, action, busy) {
   button.textContent = busy ? "..." : action === "script" ? "Script" : action === "voice" ? "Voice" : "Play voice";
 }
 
-async function copyChatGptImagePrompts() {
-  if (isRendering) return;
-  if (promptBtn) {
-    promptBtn.disabled = true;
-    promptBtn.textContent = "Preparing prompts...";
-  }
-  try {
-    if (!hasGeneratedScript) {
-      await generateStory({ openPopup: false, force: true });
-    }
-    const prompts = showPrompts(false);
-    openPromptPopup(prompts);
-    apiStatus.textContent = "Review the 4 ChatGPT image prompts, then copy them.";
-  } catch (error) {
-    alert(error.message || "Could not prepare image prompts.");
-  } finally {
-    if (promptBtn) {
-      promptBtn.disabled = false;
-      promptBtn.textContent = "Copy ChatGPT Image Prompts";
-    }
-  }
-}
-
-function openPromptPopup(prompts) {
-  if (!promptPopup || !promptPopupText) return;
-  promptPopupText.value = prompts || buildChatGptPrompts();
-  promptPopup.hidden = false;
-  promptPopupText.focus();
-  promptPopupText.select();
-}
-
-function closePromptPopup() {
-  if (!promptPopup) return;
-  promptPopup.hidden = true;
-}
-
-async function copyPromptPopupText() {
-  if (!promptPopupText) return;
-  const text = promptPopupText.value;
-  await navigator.clipboard?.writeText(text).catch(() => {});
-  promptPopupText.focus();
-  promptPopupText.select();
-  if (promptPopupCopy) {
-    promptPopupCopy.textContent = "Copied";
-    setTimeout(() => {
-      promptPopupCopy.textContent = "Copy Prompts";
-    }, 1200);
-  }
-  apiStatus.textContent = "4 prompts copied. Paste them into ChatGPT.";
-}
-
-function showPrompts(copyToClipboard = true) {
-  const finalPrompts = buildChatGptPrompts();
-  promptOutput.hidden = false;
-  promptOutput.textContent = finalPrompts;
-  if (copyToClipboard) navigator.clipboard?.writeText(finalPrompts).catch(() => {});
-  return finalPrompts;
-}
-
-function buildChatGptPrompts() {
-  const idea = buildGenerationDescription() || "A cinematic short story with a hopeful ending";
-  const aspect = videoFormat.value === "portrait" ? "vertical portrait 9:16" : "wide landscape 16:9";
-  const language = scriptLanguage.value === "malay" ? "Malay narration" : "English narration";
-  const continuity = [
-    "Same main character, same outfit, same world, same cinematic color palette.",
-    "Each image must be a separate standalone image file, not a collage, not a grid, not one combined storyboard.",
-    "No text, captions, subtitles, logo, watermark, signboard, UI, or readable letters inside the image.",
-    "Leave clean lower space for subtitles that will be added later by the video renderer.",
-  ].join(" ");
-  const prompts = subtitles.map((subtitle, index) => {
-    const storyFunction = index === 0
-      ? "opening hook, establish character and location"
-      : index === FRAME_COUNT - 1
-        ? "ending payoff, show the final emotional moment"
-        : index === 1
-          ? "problem or discovery, show a new action"
-          : "choice or turning point, show a new action";
-    const referenceNote = index === 0
-      ? "Generate this as Image 1. This is the visual reference seed."
-      : `Generate this as Image ${index + 1}. Use Image 1 only as character/style reference, but create a clearly different scene, pose, action, and camera angle.`;
-    return [
-      `PROMPT FOR CHATGPT - GENERATE IMAGE ${index + 1} ONLY`,
-      `Create one ${aspect} cinematic image for frame ${index + 1} of ${FRAME_COUNT}.`,
-      `Story idea: ${idea}`,
-      `Full story order: ${subtitles.map((line, lineIndex) => `Frame ${lineIndex + 1}: ${line}`).join(" | ")}`,
-      `This image's narration context (${language}, not visible in image): "${subtitle}"`,
-      `This image's story function: ${storyFunction}.`,
-      `Reference instruction: ${referenceNote}`,
-      `Continuity rules: ${continuity}`,
-      "Important: Generate only this one image. Do not generate the other frames in the same image."
-    ].join("\n");
-  }).join("\n\n");
-  return prompts;
-}
-
 async function generateAiImages() {
   if (isRendering) return;
   const selectedQuality = getImageQuality();
@@ -1245,7 +1139,6 @@ async function generateAiImages() {
 
     setProcess(5, "Ready. Download button is available.", 100);
     apiStatus.textContent = `Generated ${FRAME_COUNT} story images. Ready for video.`;
-    showPrompts(false);
     voiceStatus.textContent = getVoiceProvider() === "browser" ? "Browser preview only." : "Spoken voice ready.";
     setTimeout(() => {
       hideProcessUi();
@@ -1420,6 +1313,11 @@ function clearDownloadReady() {
   downloadLink.classList.remove("ready");
   downloadLink.hidden = true;
   downloadLink.removeAttribute("href");
+  downloadLink.textContent = "Download ready";
+  if (downloadStatus) {
+    downloadStatus.hidden = true;
+    downloadStatus.textContent = "";
+  }
 }
 
 async function previewVideo() {
@@ -1559,6 +1457,12 @@ async function exportVideo() {
     downloadLink.hidden = false;
     downloadLink.textContent = isMp4 ? "Download MP4" : "Download video";
     downloadLink.download = `${slugify(videoTitle.value || "storyframe-video")}.${isMp4 ? "mp4" : "webm"}`;
+    if (downloadStatus) {
+      downloadStatus.hidden = false;
+      downloadStatus.textContent = isMp4
+        ? "Video ready. Click Download MP4 to save."
+        : "Video ready. Click Download video to save.";
+    }
     setProcess(4, isMp4 ? "MP4 ready. Click Download MP4 when you want to save it." : "Video ready. Click Download video when you want to save it.", 100);
     setGuideStep(5);
     setTimeout(() => {
@@ -1757,14 +1661,28 @@ function clearAll() {
   stopPreview();
   frames = Array(FRAME_COUNT).fill(null);
   clearNarrationCache();
-  downloadLink.classList.remove("ready");
-  downloadLink.hidden = true;
-  downloadLink.removeAttribute("href");
-  promptOutput.hidden = true;
+  clearDownloadReady();
   progressFill.style.width = "0";
   renderFrameSlots();
   syncUi();
   drawPlaceholder();
+}
+
+function markDownloadStarted() {
+  if (!renderedVideoUrl) return;
+  const readyText = downloadLink.textContent || "Download MP4";
+  downloadLink.textContent = "Saving...";
+  if (downloadStatus) {
+    downloadStatus.hidden = false;
+    downloadStatus.textContent = "Download started.";
+  }
+  setTimeout(() => {
+    downloadLink.textContent = "Downloaded";
+  }, 450);
+  setTimeout(() => {
+    downloadLink.textContent = readyText;
+    if (downloadStatus) downloadStatus.textContent = "Video ready. Click again to download another copy.";
+  }, 1800);
 }
 
 function getCurrentFrameFromProgress() {
