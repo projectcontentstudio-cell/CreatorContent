@@ -437,7 +437,7 @@ function getGuideText() {
   return {
     1: "Step 1: choose niche, enter title, then continue.",
     2: `Step 2: generate ${FRAME_COUNT} script frames for a ${getSelectedDuration()}s video.`,
-    3: `Step 3: upload exactly ${FRAME_COUNT} images. Image 1 matches Script 1, Image 2 matches Script 2.`,
+    3: `Step 3: choose Manual Upload or Generate Image. Each image follows its matching script frame.`,
     4: `Step 4: preview the ${totalSeconds}s video, then generate video.`,
     5: `Step 5: video ready. Click Download MP4 to save the ${totalSeconds}s video.`
   }[guideStep] || "";
@@ -756,12 +756,12 @@ function syncUi() {
   if (readyCount) readyCount.textContent = `${count}/${FRAME_COUNT}`;
   if (manualUploadTitle) manualUploadTitle.textContent = `Upload ${FRAME_COUNT} Story Images`;
   if (manualUploadButtonText) {
-    manualUploadButtonText.textContent = count === FRAME_COUNT ? "All Images Ready" : `Upload Image ${count + 1}`;
+    manualUploadButtonText.textContent = count === FRAME_COUNT ? "All Images Ready" : `Manual Upload ${count + 1}`;
   }
   if (manualUploadStatus) {
     manualUploadStatus.textContent = count === FRAME_COUNT
       ? `${FRAME_COUNT} images ready. Click Next: Preview.`
-      : `Upload one image at a time. Next upload fills Image ${count + 1}. ${count}/${FRAME_COUNT} ready.`;
+      : `Manual Upload fills Image ${count + 1}, or Generate Image creates all ${FRAME_COUNT} images with ${getAiProvider() === "openai" ? "ChatGPT / OpenAI API" : "Google Gemini"}. ${count}/${FRAME_COUNT} ready.`;
   }
   if (emptyStateTitle) emptyStateTitle.textContent = `Upload ${FRAME_COUNT} frames`;
   if (emptyStateDetail) {
@@ -1307,7 +1307,7 @@ function setFrameActionBusy(index, action, busy) {
 async function generateAiImages() {
   if (isRendering) return;
   const selectedQuality = getImageQuality();
-  const selectedProvider = getAiProvider() === "google" ? "Google" : "OpenAI";
+  const selectedProvider = getAiProvider() === "google" ? "Google Gemini" : "ChatGPT / OpenAI API";
   if (!confirm(`Generate ${FRAME_COUNT} ${selectedQuality}-quality ${selectedProvider} images from the current script? This will use your API credits.`)) return;
 
   isRendering = true;

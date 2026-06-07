@@ -444,13 +444,15 @@ small {
 
 .manual-upload-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 440px);
+  gap: 16px;
   align-items: center;
   margin: -4px 0 16px;
-  border: 1px solid #d8e4e8;
+  border: 1px solid rgba(15, 143, 141, 0.2);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.86);
+  background:
+    linear-gradient(135deg, rgba(15, 143, 141, 0.09), rgba(255, 255, 255, 0.92) 48%),
+    #fff;
   padding: 16px;
   box-shadow: var(--soft-shadow);
 }
@@ -464,23 +466,39 @@ small {
   margin-top: 3px;
 }
 
+.image-choice-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .manual-upload-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 48px;
   border-radius: 8px;
-  background: #eaf0f4;
+  border: 1px solid #d5e0e7;
+  background: linear-gradient(180deg, #ffffff, #edf3f6);
   color: #253241;
   padding: 0 14px;
   font-size: 13px;
   font-weight: 900;
   white-space: nowrap;
   cursor: pointer;
+  box-shadow: 0 12px 28px rgba(16, 24, 32, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .manual-upload-button:hover {
-  background: #dde8ee;
+  border-color: #9ab1bf;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(16, 24, 32, 0.11);
+}
+
+.image-choice-actions .primary-btn {
+  min-height: 48px;
+  box-shadow: 0 16px 34px rgba(15, 143, 141, 0.24);
 }
 
 .manual-upload-button input {
@@ -765,6 +783,10 @@ label {
   border-color: var(--accent);
   background: #edf9f7;
   color: var(--accent-strong);
+}
+
+.provider-choice span {
+  min-height: 50px;
 }
 
 .tick-choice input:checked + span::before {
@@ -1550,6 +1572,7 @@ canvas {
   .action-grid,
   .stage-api-box,
   .manual-upload-bar,
+  .image-choice-actions,
   .guide-nav,
   .field-row {
     grid-template-columns: 1fr;

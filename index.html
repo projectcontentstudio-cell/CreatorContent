@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=credits-v3-20260606">
+  <link rel="stylesheet" href="style.css?v=image-choice-20260607">
 </head>
 <body>
   <main class="app-shell">
@@ -93,6 +93,27 @@
           </select>
         </div>
         <div class="field-group">
+          <span class="control-label">Image generator</span>
+          <div class="tick-choice two-choice provider-choice" role="radiogroup" aria-label="AI provider">
+            <label>
+              <input type="radio" name="aiProvider" value="openai" checked>
+              <span>ChatGPT / OpenAI API</span>
+            </label>
+            <label>
+              <input type="radio" name="aiProvider" value="google">
+              <span>Google Gemini</span>
+            </label>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="imageQuality">Image quality</label>
+          <select id="imageQuality">
+            <option value="low">Low - faster test</option>
+            <option value="medium" selected>Medium - balanced</option>
+            <option value="high">High - best quality</option>
+          </select>
+        </div>
+        <div class="field-group">
           <label for="videoDuration">Video duration</label>
           <select id="videoDuration">
             <option value="20" selected>20 seconds - 4 images</option>
@@ -106,20 +127,6 @@
 
         <details class="advanced-settings">
           <summary>Advanced settings</summary>
-        <div class="field-group">
-          <span class="control-label">AI provider</span>
-          <div class="tick-choice two-choice" role="radiogroup" aria-label="AI provider">
-            <label>
-              <input type="radio" name="aiProvider" value="google" checked>
-              <span>Google</span>
-            </label>
-            <label>
-              <input type="radio" name="aiProvider" value="openai">
-              <span>OpenAI</span>
-            </label>
-          </div>
-        </div>
-
         <div class="field-group">
           <label>
             Format
@@ -230,19 +237,21 @@
           <div class="generator-actions">
             <button id="generateStoryBtn" class="secondary-btn" type="button">Generate Script</button>
             <button id="hearScriptBtn" class="ghost-btn" type="button">Hear Script</button>
-            <button id="generateImagesBtn" class="primary-btn" type="button" hidden>Generate 4 Images</button>
           </div>
         </div>
 
         <div class="manual-upload-bar">
           <div>
             <strong id="manualUploadTitle">Upload Story Images</strong>
-            <small id="manualUploadStatus">Upload one image for each script frame.</small>
+            <small id="manualUploadStatus">Choose manual upload or generate images with AI.</small>
           </div>
-          <label class="manual-upload-button">
-            <input id="manualFramesInput" type="file" accept="image/*" multiple>
-            <span id="manualUploadButtonText">Upload Images</span>
-          </label>
+          <div class="image-choice-actions">
+            <label class="manual-upload-button">
+              <input id="manualFramesInput" type="file" accept="image/*" multiple>
+              <span id="manualUploadButtonText">Manual Upload</span>
+            </label>
+            <button id="generateImagesBtn" class="primary-btn" type="button">Generate Image</button>
+          </div>
         </div>
 
         <div id="uploadGuideGrid" class="upload-guide-grid" hidden></div>
@@ -336,6 +345,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=credits-v3-20260606"></script>
+  <script src="app.js?v=image-choice-20260607"></script>
 </body>
 </html>
