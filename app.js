@@ -1,5 +1,5 @@
 const FRAME_SECONDS = 5;
-const DURATION_OPTIONS = [10, 20, 40, 60, 80];
+const DURATION_OPTIONS = [10, 15, 20, 30, 40, 60, 80];
 const FPS = 30;
 const MAX_IMAGE_RETRIES = 3;
 const MAX_SUBTITLE_CHARS = 60;
@@ -18,6 +18,15 @@ const generateVeoBtn = document.querySelector("#generateVeoBtn");
 const continueToScriptBtn = document.querySelector("#continueToScriptBtn");
 const manualFramesInput = document.querySelector("#manualFramesInput");
 const productImageInput = document.querySelector("#productImageInput");
+const affiliateSetupPanel = document.querySelector("#affiliateSetupPanel");
+const affiliateInfoPanel = document.querySelector("#affiliateInfoPanel");
+const affiliateGoal = document.querySelector("#affiliateGoal");
+const affiliateLength = document.querySelector("#affiliateLength");
+const productName = document.querySelector("#productName");
+const productBenefit = document.querySelector("#productBenefit");
+const targetBuyer = document.querySelector("#targetBuyer");
+const productOffer = document.querySelector("#productOffer");
+const affiliateCta = document.querySelector("#affiliateCta");
 const productUploadPanel = document.querySelector("#productUploadPanel");
 const productUploadStatus = document.querySelector("#productUploadStatus");
 const productPreview = document.querySelector("#productPreview");
@@ -83,6 +92,7 @@ const popupUploadThumbs = document.querySelector("#popupUploadThumbs");
 const popupUploadOk = document.querySelector("#popupUploadOk");
 const controlPanel = document.querySelector(".control-panel");
 const stagePanel = document.querySelector(".stage-panel");
+const nicheStep = document.querySelector(".niche-step");
 const topGenerator = document.querySelector(".top-generator");
 const manualUploadBar = document.querySelector(".manual-upload-bar");
 const manualUploadTitle = document.querySelector("#manualUploadTitle");
@@ -255,6 +265,8 @@ function init() {
     updateVoiceStatus();
   }));
   contentModeInputs.forEach(input => input.addEventListener("change", applyContentMode));
+  if (affiliateLength) affiliateLength.addEventListener("change", applyAffiliateLength);
+  if (affiliateGoal) affiliateGoal.addEventListener("change", syncUi);
   contentNicheInputs.forEach(input => input.addEventListener("change", () => applySelectedNiche({ forceTitle: true })));
   voiceStyle.addEventListener("change", () => {
     clearNarrationCache();
@@ -301,19 +313,27 @@ function isAffiliateMode() {
 function applyContentMode() {
   const affiliate = isAffiliateMode();
   document.body.classList.toggle("affiliate-mode", affiliate);
+  if (affiliateSetupPanel) affiliateSetupPanel.hidden = !affiliate;
+  if (affiliateInfoPanel) affiliateInfoPanel.hidden = !affiliate;
+  if (nicheStep) nicheStep.hidden = affiliate;
   if (productUploadPanel) productUploadPanel.hidden = !affiliate;
   if (generateVeoBtn) generateVeoBtn.hidden = !affiliate;
   if (videoDuration) {
-    if (affiliate) videoDuration.value = "10";
+    if (affiliate) videoDuration.value = affiliateLength?.value || "10";
     videoDuration.disabled = affiliate;
   }
   if (affiliate) {
-    setFrameCount(2, { preserveStory: false, silent: true });
+    applyAffiliateLength({ silent: true });
+    hasGeneratedScript = false;
+    frames = Array(FRAME_COUNT).fill(null);
+    subtitles = Array.from({ length: FRAME_COUNT }, (_, index) => createAffiliateSubtitle(index));
+    frameDurations = Array(FRAME_COUNT).fill(FRAME_SECONDS);
+    clearNarrationCache();
     videoTitle.value = videoTitle.value && videoTitle.value !== "Cerita Seram 20 Saat"
       ? videoTitle.value
       : "Affiliate Product Video";
     if (!storyIdea.value.trim()) {
-      storyIdea.placeholder = "Example: show product benefit, problem solved, and strong call to action.";
+      storyIdea.placeholder = "Optional: describe product problem, use case, or selling point.";
     }
   } else {
     if (videoDuration) videoDuration.disabled = false;
@@ -326,6 +346,36 @@ function applyContentMode() {
   renderUploadGuide();
   drawPlaceholder();
   syncUi();
+}
+
+function applyAffiliateLength(options = {}) {
+  if (!isAffiliateMode()) return;
+  const seconds = Number(affiliateLength?.value || 10);
+  if (videoDuration) videoDuration.value = String(seconds);
+  const frameCount = Math.max(2, Math.round(seconds / FRAME_SECONDS));
+  setFrameCount(frameCount, { preserveStory: hasGeneratedScript, silent: options.silent ?? false });
+  if (!hasGeneratedScript) {
+    frames = Array(FRAME_COUNT).fill(null);
+    subtitles = Array.from({ length: FRAME_COUNT }, (_, index) => createAffiliateSubtitle(index));
+    frameDurations = Array(FRAME_COUNT).fill(FRAME_SECONDS);
+  }
+  renderScriptList();
+  renderFrameSlots();
+  renderUploadGuide();
+  drawPlaceholder();
+  syncUi();
+}
+
+function createAffiliateSubtitle(index) {
+  const lines = [
+    "Masalah ini selalu berlaku setiap hari.",
+    "Produk ini bantu selesaikan dengan cepat.",
+    "Guna sekali dan beza terus nampak.",
+    "Sesuai untuk orang yang mahu jimat masa.",
+    "Jangan tunggu stok habis baru menyesal.",
+    "Tekan link produk dan semak tawaran."
+  ];
+  return lines[index % lines.length];
 }
 
 function createDefaultSubtitle(index) {
@@ -485,6 +535,15 @@ function updateScriptPanelVisibility() {
 
 function getGuideText() {
   const totalSeconds = Math.round(getTotalDuration());
+  if (isAffiliateMode()) {
+    return {
+      1: "Step 1: choose Affiliate Video, add product details, then continue.",
+      2: `Step 2: generate ${FRAME_COUNT} sales script frames with hook, demo, proof, and CTA.`,
+      3: `Step 3: upload product image or generate ${FRAME_COUNT} product visuals. Veo 8s is optional.`,
+      4: `Step 4: preview the ${totalSeconds}s affiliate video, then generate video.`,
+      5: `Step 5: video ready. Click Download MP4 to save.`
+    }[guideStep] || "";
+  }
   return {
     1: "Step 1: choose niche, enter title, then continue.",
     2: `Step 2: generate ${FRAME_COUNT} script frames for a ${getSelectedDuration()}s video.`,
@@ -765,8 +824,31 @@ function buildGenerationDescription() {
   const preset = getSelectedNichePreset();
   const typedIdea = storyIdea.value.trim();
   if (isAffiliateMode()) {
-    const idea = typedIdea || "AI creates a short affiliate product video with a clear benefit, visual proof, and call to action.";
-    return `Mode: Affiliate Video. Product photo uploaded: ${productImageBase64 ? "yes" : "no"}. User product direction: ${idea}`;
+    const goalLabels = {
+      "problem": "Problem/Solution",
+      "review": "Honest Review",
+      "demo": "Product Demo",
+      "before-after": "Before/After",
+      "unboxing": "Unboxing"
+    };
+    const product = productName?.value.trim() || videoTitle.value.trim() || "the product";
+    const benefit = productBenefit?.value.trim() || "show the main benefit clearly";
+    const buyer = targetBuyer?.value.trim() || "the ideal buyer";
+    const offer = productOffer?.value.trim() || "no specific offer";
+    const cta = affiliateCta?.value.trim() || "Check the product link before it sells out.";
+    const idea = typedIdea || "Make the product appear in the first 2 seconds, then show benefit and buying reason.";
+    return [
+      "Mode: Affiliate Video.",
+      `Selling angle: ${goalLabels[affiliateGoal?.value] || "Problem/Solution"}.`,
+      `Product: ${product}.`,
+      `Main benefit: ${benefit}.`,
+      `Target buyer: ${buyer}.`,
+      `Offer: ${offer}.`,
+      `CTA: ${cta}`,
+      `Product photo uploaded: ${productImageBase64 ? "yes" : "no"}.`,
+      `User direction: ${idea}`,
+      "Structure: hook/problem, product reveal, demo/proof, result, CTA. Product must appear immediately."
+    ].join(" ");
   }
   const idea = typedIdea || `AI creates a complete idea for ${preset.label} content.`;
   return `Niche: ${preset.label}. Direction: ${preset.prompt}. User idea: ${idea}`;
@@ -817,14 +899,14 @@ function syncUi() {
     manualUploadStatus.textContent = count === FRAME_COUNT
       ? `${FRAME_COUNT} images ready. Click Next: Preview.`
       : isAffiliateMode()
-        ? `Upload product photo first, then Manual Upload or Generate Image creates 2 affiliate images. ${count}/${FRAME_COUNT} ready.`
+        ? `Ready product flow: upload product, generate script, then create ${FRAME_COUNT} affiliate images or Veo 8s. ${count}/${FRAME_COUNT} ready.`
         : `Manual Upload fills Image ${count + 1}, or Generate Image creates all ${FRAME_COUNT} images with ${getAiProvider() === "openai" ? "ChatGPT / OpenAI API" : "Google Gemini"}. ${count}/${FRAME_COUNT} ready.`;
   }
   if (emptyStateTitle) emptyStateTitle.textContent = `Upload ${FRAME_COUNT} frames`;
   if (emptyStateDetail) {
     emptyStateDetail.textContent = `${getSelectedDuration()}s video: one image per script frame, synced with subtitles and voice.`;
   }
-  if (generateImagesBtn) generateImagesBtn.textContent = isAffiliateMode() ? "Generate 2 Product Images" : `Generate ${FRAME_COUNT} Images`;
+  if (generateImagesBtn) generateImagesBtn.textContent = isAffiliateMode() ? `Generate ${FRAME_COUNT} Product Images` : `Generate ${FRAME_COUNT} Images`;
   emptyState.hidden = count > 0;
   exportBtn.disabled = count !== FRAME_COUNT || isRendering || Boolean(renderedVideoUrl);
   exportBtn.hidden = Boolean(renderedVideoUrl);
@@ -1087,7 +1169,14 @@ async function generateStory(options = {}) {
         niche: getSelectedNichePreset().label,
         provider: getAiProvider(),
         language: scriptLanguage.value,
-        frameCount: FRAME_COUNT
+        frameCount: FRAME_COUNT,
+        mode: getContentMode(),
+        affiliateGoal: affiliateGoal?.value || "problem",
+        productName: productName?.value.trim() || "",
+        productBenefit: productBenefit?.value.trim() || "",
+        targetBuyer: targetBuyer?.value.trim() || "",
+        productOffer: productOffer?.value.trim() || "",
+        affiliateCta: affiliateCta?.value.trim() || ""
       })
     });
     const result = await response.json();

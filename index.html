@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=affiliate-veo-20260607">
+  <link rel="stylesheet" href="style.css?v=ready-affiliate-20260607">
 </head>
 <body>
   <main class="app-shell">
@@ -44,6 +44,31 @@
               <input type="radio" name="contentMode" value="affiliate">
               <span>Affiliate Video</span>
             </label>
+          </div>
+        </div>
+
+        <div id="affiliateSetupPanel" class="setup-step affiliate-setup-panel" hidden>
+          <div class="step-label">
+            <span>2</span>
+            <strong>Affiliate setup</strong>
+          </div>
+          <div class="field-group first-field">
+            <label for="affiliateGoal">Selling angle</label>
+            <select id="affiliateGoal">
+              <option value="problem" selected>Problem/Solution</option>
+              <option value="review">Honest Review</option>
+              <option value="demo">Product Demo</option>
+              <option value="before-after">Before/After</option>
+              <option value="unboxing">Unboxing</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="affiliateLength">Affiliate format</label>
+            <select id="affiliateLength">
+              <option value="10" selected>10s Simple - 2 images</option>
+              <option value="15">15s Product Short - 3 images</option>
+              <option value="30">30s TikTok Affiliate - 6 images</option>
+            </select>
           </div>
         </div>
 
@@ -102,6 +127,32 @@
           <label for="storyIdea">Description</label>
           <textarea id="storyIdea" rows="4" placeholder="Optional. If empty, AI will create the story idea from title and niche."></textarea>
         </div>
+        <div id="affiliateInfoPanel" class="affiliate-info-panel" hidden>
+          <div class="field-row">
+            <label>
+              Product name
+              <input id="productName" type="text" placeholder="Example: Mini blender">
+            </label>
+            <label>
+              Main benefit
+              <input id="productBenefit" type="text" placeholder="Example: Blend juice anywhere">
+            </label>
+          </div>
+          <div class="field-row">
+            <label>
+              Target buyer
+              <input id="targetBuyer" type="text" placeholder="Example: busy moms, students">
+            </label>
+            <label>
+              Price / offer
+              <input id="productOffer" type="text" placeholder="Optional: RM29.90, free shipping">
+            </label>
+          </div>
+          <div class="field-group">
+            <label for="affiliateCta">Call to action</label>
+            <input id="affiliateCta" type="text" value="Check the product link before it sells out.">
+          </div>
+        </div>
         <div id="productUploadPanel" class="product-upload-panel" hidden>
           <div>
             <strong>Product image</strong>
@@ -146,6 +197,8 @@
           <select id="videoDuration">
             <option value="20" selected>20 seconds - 4 images</option>
             <option value="10">10 seconds - 2 images</option>
+            <option value="15">15 seconds - 3 images</option>
+            <option value="30">30 seconds - 6 images</option>
             <option value="40">40 seconds - 8 images</option>
             <option value="60">60 seconds - 12 images</option>
             <option value="80">80 seconds - 16 images</option>
@@ -375,6 +428,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=affiliate-veo-20260607"></script>
+  <script src="app.js?v=ready-affiliate-20260607"></script>
 </body>
 </html>

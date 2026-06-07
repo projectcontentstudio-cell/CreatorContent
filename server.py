@@ -767,7 +767,23 @@ def generate_gemini_voice(api_key, text, style, language, voice_name=""):
 def generate_script(api_key, title, description, language, niche="", provider="openai", frame_count=4):
     model = os.environ.get("GEMINI_TEXT_MODEL" if provider == "google" else "OPENAI_TEXT_MODEL", "gemini-3.5-flash" if provider == "google" else "gpt-4.1-mini")
     language_name = "Malay" if language == "malay" else "English"
-    prompt = (
+    if "Mode: Affiliate Video" in description:
+        prompt = (
+            f"Create a TikTok affiliate product video script for exactly {frame_count} frames.\n"
+            "Return ONLY valid JSON with this shape:\n"
+            '{"title":"string","description":"string","frames":["hook","demo","proof","cta"]}\n'
+            "Rules:\n"
+            f"- Write every narration line in {language_name} only.\n"
+            "- Product must appear or be mentioned immediately.\n"
+            "- Use this selling arc: hook/problem, product reveal, demo/proof, result, CTA.\n"
+            "- Each line must be 60 characters or fewer and complete.\n"
+            "- No exaggerated medical, financial, or guaranteed claims.\n"
+            "- No numbering. No markdown.\n\n"
+            f"Affiliate brief: {description}\n"
+            f"Title: {title}"
+        )
+    else:
+        prompt = (
         f"Create a short image-to-video narration for exactly {frame_count} frames.\n"
         f"The final video has {frame_count} frames. Each frame duration will follow that frame's voice length.\n"
         "Return ONLY valid JSON with this shape:\n"
@@ -797,7 +813,7 @@ def generate_script(api_key, title, description, language, niche="", provider="o
         f"User title: {title}\n"
         f"Selected niche: {niche or 'General'}\n"
         f"User description: {description or 'Use the title, but do not change the core topic.'}"
-    )
+        )
     if provider == "google":
         data = gemini_generate_text(api_key, model, prompt, 0.8)
         text = extract_gemini_text(data)

@@ -267,6 +267,45 @@ small {
   animation: riseIn 0.5s ease both;
 }
 
+.affiliate-mode .control-panel {
+  background:
+    linear-gradient(145deg, rgba(255, 248, 234, 0.9), rgba(255, 255, 255, 0.92) 46%),
+    #fff;
+}
+
+.affiliate-setup-panel,
+.affiliate-info-panel,
+.product-upload-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.affiliate-setup-panel {
+  border-color: rgba(217, 162, 56, 0.38);
+  background:
+    linear-gradient(135deg, rgba(217, 162, 56, 0.18), rgba(255, 255, 255, 0.94) 46%),
+    #fff;
+}
+
+.affiliate-setup-panel::after,
+.product-upload-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--coral), var(--accent));
+}
+
+.affiliate-info-panel {
+  margin-top: 18px;
+  border: 1px solid rgba(15, 143, 141, 0.2);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(15, 143, 141, 0.09), rgba(255, 255, 255, 0.94) 52%),
+    #fff;
+  padding: 14px;
+}
+
 .setup-step:nth-of-type(2) {
   animation-delay: 0.08s;
 }
@@ -793,6 +832,13 @@ label {
   min-height: 62px;
   justify-content: center;
   font-size: 14px;
+}
+
+.mode-choice input[value="affiliate"]:checked + span {
+  border-color: rgba(217, 162, 56, 0.75);
+  background: linear-gradient(180deg, #fff8ea, #ffffff);
+  color: #7b5300;
+  box-shadow: inset 0 0 0 1px rgba(217, 162, 56, 0.32), 0 16px 36px rgba(217, 162, 56, 0.16);
 }
 
 .product-upload-panel {

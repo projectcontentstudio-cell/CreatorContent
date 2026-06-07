@@ -11,6 +11,29 @@ export default async function handler(req, res) {
     const title = String(body.title || "A 20 Second Story").trim();
     const description = String(body.description || "").trim();
     const niche = String(body.niche || "General").trim();
+    const mode = String(body.mode || "story").trim();
+    const productName = String(body.productName || title || "the product").trim();
+    const productBenefit = String(body.productBenefit || "the main product benefit").trim();
+    const targetBuyer = String(body.targetBuyer || "the ideal buyer").trim();
+    const productOffer = String(body.productOffer || "no specific offer").trim();
+    const affiliateCta = String(body.affiliateCta || "Check the product link before it sells out.").trim();
+    const affiliateGoal = String(body.affiliateGoal || "problem").trim();
+    const affiliatePrompt = [
+      `Create a TikTok affiliate video script for exactly ${frameCount} frames.`,
+      `Return ONLY valid JSON like {"title":"string","description":"string","frames":["line1","line2"]}.`,
+      `Write every narration line in ${languageName} only.`,
+      `Each line must be 60 characters or fewer and complete.`,
+      `Selling angle: ${affiliateGoal}.`,
+      `Product: ${productName}.`,
+      `Main benefit: ${productBenefit}.`,
+      `Target buyer: ${targetBuyer}.`,
+      `Offer: ${productOffer}.`,
+      `CTA: ${affiliateCta}`,
+      `Video structure: first frame must hook/problem and reveal product fast; middle frames demo benefit or proof; final frame strong CTA.`,
+      `No exaggerated medical, financial, or guaranteed claims.`,
+      `No numbering inside subtitles. No markdown.`,
+      `User direction: ${description || "Make it clear, direct, and ready to sell."}`,
+    ].join("\n");
     const prompt = [
       `Create a short image-to-video narration for exactly ${frameCount} frames.`,
       `Return ONLY valid JSON like {"title":"string","description":"string","frames":["line1","line2","line3","line4"]}.`,
@@ -24,7 +47,7 @@ export default async function handler(req, res) {
       `User description: ${description || "Create a clear description from the title and niche."}`,
     ].join("\n");
     const data = await geminiGenerate(process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash", {
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts: [{ text: mode === "affiliate" ? affiliatePrompt : prompt }] }],
       generationConfig: { temperature: 0.8 },
     }, apiKey);
     const parsed = parseJsonObject(extractGeminiText(data));
