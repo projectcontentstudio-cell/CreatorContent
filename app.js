@@ -1,5 +1,5 @@
 const FRAME_SECONDS = 5;
-const DURATION_OPTIONS = [20, 40, 60, 80];
+const DURATION_OPTIONS = [10, 20, 40, 60, 80];
 const FPS = 30;
 const MAX_IMAGE_RETRIES = 3;
 const MAX_SUBTITLE_CHARS = 60;
@@ -14,8 +14,13 @@ let HEIGHT = 854;
 const generateStoryBtn = document.querySelector("#generateStoryBtn");
 const hearScriptBtn = document.querySelector("#hearScriptBtn");
 const generateImagesBtn = document.querySelector("#generateImagesBtn");
+const generateVeoBtn = document.querySelector("#generateVeoBtn");
 const continueToScriptBtn = document.querySelector("#continueToScriptBtn");
 const manualFramesInput = document.querySelector("#manualFramesInput");
+const productImageInput = document.querySelector("#productImageInput");
+const productUploadPanel = document.querySelector("#productUploadPanel");
+const productUploadStatus = document.querySelector("#productUploadStatus");
+const productPreview = document.querySelector("#productPreview");
 const manualUploadStatus = document.querySelector("#manualUploadStatus");
 const playBtn = document.querySelector("#playBtn");
 const exportBtn = document.querySelector("#exportBtn");
@@ -25,6 +30,7 @@ const voiceStyle = document.querySelector("#voiceStyle");
 const geminiVoice = document.querySelector("#geminiVoice");
 const imageQuality = document.querySelector("#imageQuality");
 const aiProviderInputs = document.querySelectorAll("input[name='aiProvider']");
+const contentModeInputs = document.querySelectorAll("input[name='contentMode']");
 const voiceProviderInputs = document.querySelectorAll("input[name='voiceProvider']");
 const contentNicheInputs = document.querySelectorAll("input[name='contentNiche']");
 const videoFormat = document.querySelector("#videoFormat");
@@ -115,6 +121,8 @@ let processWasClosed = false;
 let renderedVideoUrl = "";
 let guideStep = 1;
 let adminCredits = readCredits();
+let productImageBase64 = "";
+let productImageMime = "image/png";
 const nichePresets = {
   scary: {
     label: "Seram",
@@ -182,7 +190,9 @@ function init() {
   if (guideNextBtn) guideNextBtn.addEventListener("click", handleGuideNext);
   if (hearScriptBtn) hearScriptBtn.addEventListener("click", hearScript);
   if (generateImagesBtn) generateImagesBtn.addEventListener("click", generateAiImages);
+  if (generateVeoBtn) generateVeoBtn.addEventListener("click", generateVeoVideo);
   if (manualFramesInput) manualFramesInput.addEventListener("change", handleManualUpload);
+  if (productImageInput) productImageInput.addEventListener("change", handleProductUpload);
   playBtn.addEventListener("click", previewVideo);
   exportBtn.addEventListener("click", exportVideo);
   downloadLink.addEventListener("click", markDownloadStarted);
@@ -244,6 +254,7 @@ function init() {
     clearNarrationCache();
     updateVoiceStatus();
   }));
+  contentModeInputs.forEach(input => input.addEventListener("change", applyContentMode));
   contentNicheInputs.forEach(input => input.addEventListener("change", () => applySelectedNiche({ forceTitle: true })));
   voiceStyle.addEventListener("change", () => {
     clearNarrationCache();
@@ -265,6 +276,7 @@ function init() {
     loadDemoFrames();
   }
   checkApiStatus();
+  applyContentMode();
   setGuideStep(1);
 }
 
@@ -276,6 +288,44 @@ function getFrameCountFromDuration() {
 
 function getSelectedDuration() {
   return FRAME_COUNT * FRAME_SECONDS;
+}
+
+function getContentMode() {
+  return document.querySelector("input[name='contentMode']:checked")?.value || "story";
+}
+
+function isAffiliateMode() {
+  return getContentMode() === "affiliate";
+}
+
+function applyContentMode() {
+  const affiliate = isAffiliateMode();
+  document.body.classList.toggle("affiliate-mode", affiliate);
+  if (productUploadPanel) productUploadPanel.hidden = !affiliate;
+  if (generateVeoBtn) generateVeoBtn.hidden = !affiliate;
+  if (videoDuration) {
+    if (affiliate) videoDuration.value = "10";
+    videoDuration.disabled = affiliate;
+  }
+  if (affiliate) {
+    setFrameCount(2, { preserveStory: false, silent: true });
+    videoTitle.value = videoTitle.value && videoTitle.value !== "Cerita Seram 20 Saat"
+      ? videoTitle.value
+      : "Affiliate Product Video";
+    if (!storyIdea.value.trim()) {
+      storyIdea.placeholder = "Example: show product benefit, problem solved, and strong call to action.";
+    }
+  } else {
+    if (videoDuration) videoDuration.disabled = false;
+    setFrameCount(getFrameCountFromDuration(), { preserveStory: hasGeneratedScript, silent: true });
+    applySelectedNiche({ forceTitle: false });
+  }
+  clearDownloadReady();
+  renderScriptList();
+  renderFrameSlots();
+  renderUploadGuide();
+  drawPlaceholder();
+  syncUi();
 }
 
 function createDefaultSubtitle(index) {
@@ -320,7 +370,8 @@ function createDefaultSubtitle(index) {
 }
 
 function setFrameCount(nextCount, options = {}) {
-  const safeCount = Math.max(4, Math.min(16, Number(nextCount) || 4));
+  const minCount = isAffiliateMode() ? 2 : 4;
+  const safeCount = Math.max(minCount, Math.min(16, Number(nextCount) || minCount));
   const previousCount = FRAME_COUNT;
   FRAME_COUNT = safeCount;
   frames = Array.from({ length: FRAME_COUNT }, (_, index) => frames[index] || null);
@@ -713,6 +764,10 @@ function applySelectedNiche({ forceTitle = false } = {}) {
 function buildGenerationDescription() {
   const preset = getSelectedNichePreset();
   const typedIdea = storyIdea.value.trim();
+  if (isAffiliateMode()) {
+    const idea = typedIdea || "AI creates a short affiliate product video with a clear benefit, visual proof, and call to action.";
+    return `Mode: Affiliate Video. Product photo uploaded: ${productImageBase64 ? "yes" : "no"}. User product direction: ${idea}`;
+  }
   const idea = typedIdea || `AI creates a complete idea for ${preset.label} content.`;
   return `Niche: ${preset.label}. Direction: ${preset.prompt}. User idea: ${idea}`;
 }
@@ -761,13 +816,15 @@ function syncUi() {
   if (manualUploadStatus) {
     manualUploadStatus.textContent = count === FRAME_COUNT
       ? `${FRAME_COUNT} images ready. Click Next: Preview.`
-      : `Manual Upload fills Image ${count + 1}, or Generate Image creates all ${FRAME_COUNT} images with ${getAiProvider() === "openai" ? "ChatGPT / OpenAI API" : "Google Gemini"}. ${count}/${FRAME_COUNT} ready.`;
+      : isAffiliateMode()
+        ? `Upload product photo first, then Manual Upload or Generate Image creates 2 affiliate images. ${count}/${FRAME_COUNT} ready.`
+        : `Manual Upload fills Image ${count + 1}, or Generate Image creates all ${FRAME_COUNT} images with ${getAiProvider() === "openai" ? "ChatGPT / OpenAI API" : "Google Gemini"}. ${count}/${FRAME_COUNT} ready.`;
   }
   if (emptyStateTitle) emptyStateTitle.textContent = `Upload ${FRAME_COUNT} frames`;
   if (emptyStateDetail) {
     emptyStateDetail.textContent = `${getSelectedDuration()}s video: one image per script frame, synced with subtitles and voice.`;
   }
-  if (generateImagesBtn) generateImagesBtn.textContent = `Generate ${FRAME_COUNT} Images`;
+  if (generateImagesBtn) generateImagesBtn.textContent = isAffiliateMode() ? "Generate 2 Product Images" : `Generate ${FRAME_COUNT} Images`;
   emptyState.hidden = count > 0;
   exportBtn.disabled = count !== FRAME_COUNT || isRendering || Boolean(renderedVideoUrl);
   exportBtn.hidden = Boolean(renderedVideoUrl);
@@ -1362,7 +1419,8 @@ async function generateAiImages() {
 
 async function generateImageWithRetry(index, stepIndex, referenceFrame) {
   let lastError = null;
-  const referenceLabel = referenceFrame ? " using scene 1 identity reference" : " from story prompt";
+  const hasProductReference = isAffiliateMode() && productImageBase64;
+  const referenceLabel = hasProductReference ? " using product photo" : referenceFrame ? " using scene 1 identity reference" : " from story prompt";
   for (let attempt = 1; attempt <= MAX_IMAGE_RETRIES; attempt += 1) {
     try {
       setProcess(
@@ -1386,7 +1444,9 @@ async function generateImageWithRetry(index, stepIndex, referenceFrame) {
           quality: getImageQuality(),
           size: getImageSize(),
           index,
-          referenceImage: referenceFrame?.b64 || ""
+          referenceImage: hasProductReference ? productImageBase64 : referenceFrame?.b64 || "",
+          referenceMime: hasProductReference ? productImageMime : "image/png",
+          mode: getContentMode()
         })
       });
       const result = await response.json();
@@ -1410,6 +1470,95 @@ async function generateImageWithRetry(index, stepIndex, referenceFrame) {
     }
   }
   throw new Error(`Image ${index + 1} failed after ${MAX_IMAGE_RETRIES} tries. ${lastError?.message || ""}`);
+}
+
+async function handleProductUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("Please upload an image file for the product.");
+    event.target.value = "";
+    return;
+  }
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    const [, payload = ""] = dataUrl.split(",", 2);
+    productImageBase64 = payload;
+    productImageMime = file.type || "image/png";
+    if (productPreview) {
+      productPreview.src = dataUrl;
+      productPreview.hidden = false;
+    }
+    if (productUploadStatus) productUploadStatus.textContent = "Product photo ready for affiliate images and Veo.";
+    clearDownloadReady();
+    syncUi();
+  } catch (error) {
+    alert(error.message || "Could not load product image.");
+  } finally {
+    event.target.value = "";
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read product image."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function generateVeoVideo() {
+  if (isRendering) return;
+  if (!isAffiliateMode()) return;
+  if (!productImageBase64 && !frames.find(Boolean)?.b64) {
+    alert("Upload a product photo or generate product images first.");
+    return;
+  }
+  if (!confirm("Generate an 8-second Veo Fast affiliate video? This can use paid Google API credits.")) return;
+  isRendering = true;
+  showProcess("Veo Fast 8s", "Sending product video request...");
+  if (generateVeoBtn) {
+    generateVeoBtn.disabled = true;
+    generateVeoBtn.textContent = "Requesting Veo...";
+  }
+  try {
+    const sourceFrame = frames.find(Boolean);
+    const response = await fetch("/api/generate-veo-video", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: videoTitle.value,
+        description: buildGenerationDescription(),
+        image: productImageBase64 || sourceFrame?.b64 || "",
+        mime: productImageMime || sourceFrame?.mime || "image/png",
+        aspectRatio: videoFormat.value === "landscape" ? "16:9" : "9:16",
+        durationSeconds: 8
+      })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || "Veo video request failed.");
+    setProcess(4, "Veo request started. Check the returned operation in the API response.", 100);
+    apiStatus.textContent = result.videoUrl ? "Veo video ready." : `Veo request started: ${result.operationName || "operation created"}`;
+    if (result.videoUrl) {
+      downloadLink.href = result.videoUrl;
+      downloadLink.download = `${slugify(videoTitle.value || "affiliate-veo")}.mp4`;
+      downloadLink.textContent = "Download Veo MP4";
+      downloadLink.classList.add("ready");
+      downloadLink.hidden = false;
+    }
+    setTimeout(() => hideProcessUi(), 900);
+  } catch (error) {
+    failProcess(error.message);
+    alert(error.message);
+  } finally {
+    isRendering = false;
+    if (generateVeoBtn) {
+      generateVeoBtn.disabled = false;
+      generateVeoBtn.textContent = "Veo Fast 8s";
+    }
+    syncUi();
+  }
 }
 
 function wait(ms) {

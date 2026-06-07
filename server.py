@@ -16,6 +16,7 @@ OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech"
 GEMINI_GENERATE_URL = "https://generativelanguage.googleapis.com/v1/models/{model}:generateContent"
 GEMINI_TTS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+GEMINI_VEO_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:predictLongRunning"
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 MAX_SUBTITLE_CHARS = 60
 
@@ -128,6 +129,9 @@ class StoryFrameHandler(BaseHTTPRequestHandler):
             if self.path == "/api/generate-gemini-voice":
                 self.handle_generate_gemini_voice()
                 return
+            if self.path == "/api/generate-veo-video":
+                self.handle_generate_veo_video()
+                return
             self.send_error(404, "API endpoint not found")
             return
 
@@ -227,6 +231,57 @@ class StoryFrameHandler(BaseHTTPRequestHandler):
             frame_count = int(body.get("frameCount", 4) or 4)
             script = generate_script(api_key, title, description, language, niche, provider, frame_count)
             self.send_json({"ok": True, **script})
+        except HTTPError as error:
+            detail = format_http_error(error)
+            self.send_json({"ok": False, "error": detail}, status=error.code)
+        except (URLError, TimeoutError) as error:
+            self.send_json({"ok": False, "error": f"Network error: {error}"}, status=502)
+        except Exception as error:
+            self.send_json({"ok": False, "error": str(error)}, status=500)
+
+    def handle_generate_veo_video(self):
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = json.loads(self.rfile.read(length).decode("utf-8"))
+            api_key = get_gemini_key()
+            if not api_key:
+                self.send_json({"ok": False, "error": "Put GEMINI_API_KEY in .env first for Veo."}, status=400)
+                return
+            model = os.environ.get("VEO_MODEL", "veo-3.1-fast-generate-preview")
+            prompt = (
+                "Create an 8-second vertical affiliate product video with natural motion.\n"
+                f"Title: {body.get('title') or 'Affiliate product video'}.\n"
+                f"Product direction: {body.get('description') or 'Show product benefit and desire.'}\n"
+                "Make the product clear and attractive. Smooth push-in camera, TikTok-ready, no text overlay, no watermark."
+            )
+            instance = {"prompt": prompt}
+            image_b64 = re.sub(r"^data:[^,]+,", "", body.get("image") or "").strip()
+            if image_b64:
+                instance["image"] = {
+                    "bytesBase64Encoded": image_b64,
+                    "mimeType": body.get("mime") or "image/png",
+                }
+            payload = {
+                "instances": [instance],
+                "parameters": {
+                    "aspectRatio": body.get("aspectRatio") or "9:16",
+                    "durationSeconds": 8,
+                    "generateAudio": True,
+                    "sampleCount": 1,
+                },
+            }
+            request = Request(
+                GEMINI_VEO_URL.format(model=model),
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "x-goog-api-key": api_key,
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            with urlopen(request, timeout=60) as response:
+                operation = json.loads(response.read().decode("utf-8"))
+            self.send_json({"ok": True, "operationName": operation.get("name", ""), "done": False, "videoUrl": ""})
         except HTTPError as error:
             detail = format_http_error(error)
             self.send_json({"ok": False, "error": detail}, status=error.code)
@@ -348,6 +403,7 @@ def build_prompts(body):
     idea = (body.get("idea") or "A cinematic short story with a hopeful ending").strip()
     title = (body.get("title") or "A 24 Second Story").strip()
     niche = (body.get("niche") or "General").strip()
+    mode = (body.get("mode") or "story").strip().lower()
     subtitles = body.get("subtitles") or []
     video_format = body.get("format") or "portrait"
     language = body.get("language") or "english"
@@ -362,6 +418,22 @@ def build_prompts(body):
     for index in range(frame_count):
         beat = subtitles[index] if index < len(subtitles) and subtitles[index] else f"Scene {index + 1} of the story"
         camera_note = build_camera_note(motion, index)
+        if mode == "affiliate":
+            prompts.append(
+                "Create one premium affiliate product image for a short product video.\n"
+                "ABSOLUTE TEXT BAN: the generated picture must contain zero readable text of any kind.\n"
+                f"Title/product angle: {title}\n"
+                f"Product direction: {idea}\n"
+                f"Frame: {index + 1} of {frame_count}\n"
+                f"Spoken sales narration context, never visible in image: {beat}\n"
+                f"Aspect and framing: {aspect}; keep the product clear and leave clean lower space for subtitles.\n"
+                "Use the uploaded product reference if provided. Preserve product design and important details.\n"
+                "Show a new selling moment: lifestyle use, benefit reveal, hand interaction, or before/after context.\n"
+                f"Camera direction: {camera_note}\n"
+                f"Quality direction: {build_quality_note(quality)}\n"
+                "Final hard rule: no typography, no letters, no words, no captions, no subtitles, no signs, no watermark, no logo."
+            )
+            continue
         prompts.append(
             "Create one cinematic storyboard frame for a connected image-to-video story.\n"
             "ABSOLUTE TEXT BAN: the generated picture must contain zero readable text of any kind.\n"

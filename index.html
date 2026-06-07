@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=image-choice-20260607">
+  <link rel="stylesheet" href="style.css?v=affiliate-veo-20260607">
 </head>
 <body>
   <main class="app-shell">
@@ -33,6 +33,23 @@
         <div class="setup-step">
           <div class="step-label">
             <span>1</span>
+            <strong>Content type</strong>
+          </div>
+          <div class="tick-choice two-choice mode-choice" role="radiogroup" aria-label="Content type">
+            <label>
+              <input type="radio" name="contentMode" value="story" checked>
+              <span>Storytelling</span>
+            </label>
+            <label>
+              <input type="radio" name="contentMode" value="affiliate">
+              <span>Affiliate Video</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setup-step niche-step">
+          <div class="step-label">
+            <span>2</span>
             <strong>Choose niche</strong>
           </div>
           <div class="niche-grid" role="radiogroup" aria-label="Content niche">
@@ -73,7 +90,7 @@
 
         <div class="setup-step">
           <div class="step-label">
-            <span>2</span>
+            <span>3</span>
             <strong>Content idea</strong>
           </div>
         <div class="field-group first-field">
@@ -84,6 +101,17 @@
         <div class="field-group">
           <label for="storyIdea">Description</label>
           <textarea id="storyIdea" rows="4" placeholder="Optional. If empty, AI will create the story idea from title and niche."></textarea>
+        </div>
+        <div id="productUploadPanel" class="product-upload-panel" hidden>
+          <div>
+            <strong>Product image</strong>
+            <small id="productUploadStatus">Upload one product photo for affiliate images and Veo.</small>
+          </div>
+          <label class="product-upload-button">
+            <input id="productImageInput" type="file" accept="image/*">
+            <span>Upload Product</span>
+          </label>
+          <img id="productPreview" alt="Product preview" hidden>
         </div>
         <div class="field-group">
           <label for="scriptLanguage">Language</label>
@@ -117,6 +145,7 @@
           <label for="videoDuration">Video duration</label>
           <select id="videoDuration">
             <option value="20" selected>20 seconds - 4 images</option>
+            <option value="10">10 seconds - 2 images</option>
             <option value="40">40 seconds - 8 images</option>
             <option value="60">60 seconds - 12 images</option>
             <option value="80">80 seconds - 16 images</option>
@@ -251,6 +280,7 @@
               <span id="manualUploadButtonText">Manual Upload</span>
             </label>
             <button id="generateImagesBtn" class="primary-btn" type="button">Generate Image</button>
+            <button id="generateVeoBtn" class="secondary-btn" type="button" hidden>Veo Fast 8s</button>
           </div>
         </div>
 
@@ -345,6 +375,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=image-choice-20260607"></script>
+  <script src="app.js?v=affiliate-veo-20260607"></script>
 </body>
 </html>

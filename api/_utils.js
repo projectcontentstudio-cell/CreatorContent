@@ -18,6 +18,11 @@ export function getGeminiKey() {
   return key && !key.startsWith("replace-with") ? key : "";
 }
 
+export function getOpenAIKey() {
+  const key = (process.env.OPENAI_API_KEY || "").trim();
+  return key && key.startsWith("sk-") && !key.startsWith("replace-with") ? key : "";
+}
+
 export function getElevenLabsKey() {
   const key = (process.env.ELEVENLABS_API_KEY || "").trim();
   return key && !key.startsWith("replace-with") ? key : "";

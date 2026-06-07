@@ -1,8 +1,9 @@
-import { getElevenLabsKey, getGeminiKey, sendJson } from "./_utils.js";
+import { getElevenLabsKey, getGeminiKey, getOpenAIKey, sendJson } from "./_utils.js";
 
 export default function handler(req, res) {
   sendJson(res, 200, {
     ok: true,
+    hasKey: Boolean(getOpenAIKey()),
     hasGeminiKey: Boolean(getGeminiKey()),
     hasElevenLabsKey: Boolean(getElevenLabsKey()),
     geminiTextModel: process.env.GEMINI_TEXT_MODEL || "gemini-2.5-flash",
