@@ -419,19 +419,29 @@ def build_prompts(body):
         beat = subtitles[index] if index < len(subtitles) and subtitles[index] else f"Scene {index + 1} of the story"
         camera_note = build_camera_note(motion, index)
         if mode == "affiliate":
+            if index == 0:
+                scene_role = (
+                    "Scene role: Problem scene. Show a relatable daily pain before using the product. "
+                    "Keep it natural, not a hard sell. The product may appear subtly only if it helps continuity."
+                )
+            else:
+                scene_role = (
+                    "Scene role: Solution scene. Show the uploaded product clearly as the simple way out. "
+                    "Keep the product central, desirable, and accurate."
+                )
             prompts.append(
                 "Create one premium affiliate product image for a short product video.\n"
                 "ABSOLUTE TEXT BAN: the generated picture must contain zero readable text of any kind.\n"
                 f"Title/product angle: {title}\n"
                 f"Product direction: {idea}\n"
                 f"Frame: {index + 1} of {frame_count}\n"
+                f"{scene_role}\n"
                 f"Spoken sales narration context, never visible in image: {beat}\n"
                 f"Aspect and framing: {aspect}; keep the product clear and leave clean lower space for subtitles.\n"
-                "Use the uploaded product reference if provided. Preserve product design and important details.\n"
-                "Show a new selling moment: lifestyle use, benefit reveal, hand interaction, or before/after context.\n"
+                "Use the uploaded product reference if provided. Preserve product shape, color, packaging, logo, and label when visible.\n"
                 f"Camera direction: {camera_note}\n"
                 f"Quality direction: {build_quality_note(quality)}\n"
-                "Final hard rule: no typography, no letters, no words, no captions, no subtitles, no signs, no watermark, no logo."
+                "Final hard rule: no typography, no extra letters, no captions, no subtitles, no signs, no watermark, no extra logo beyond the real product label."
             )
             continue
         prompts.append(
@@ -767,15 +777,17 @@ def generate_gemini_voice(api_key, text, style, language, voice_name=""):
 def generate_script(api_key, title, description, language, niche="", provider="openai", frame_count=4):
     model = os.environ.get("GEMINI_TEXT_MODEL" if provider == "google" else "OPENAI_TEXT_MODEL", "gemini-3.5-flash" if provider == "google" else "gpt-4.1-mini")
     language_name = "Malay" if language == "malay" else "English"
-    if "Mode: Affiliate Video" in description:
+    expected_frame_count = frame_count
+    if "Mode: Affiliate Video" in description or "Mode: Affiliate Product MVP" in description:
+        expected_frame_count = 2
         prompt = (
-            f"Create a TikTok affiliate product video script for exactly {frame_count} frames.\n"
+            "Create a TikTok affiliate product MVP script for exactly 2 frames.\n"
             "Return ONLY valid JSON with this shape:\n"
-            '{"title":"string","description":"string","frames":["hook","demo","proof","cta"]}\n'
+            '{"title":"string","description":"string","frames":["problem","solution plus CTA"]}\n'
             "Rules:\n"
             f"- Write every narration line in {language_name} only.\n"
-            "- Product must appear or be mentioned immediately.\n"
-            "- Use this selling arc: hook/problem, product reveal, demo/proof, result, CTA.\n"
+            "- Frame 1 is a relatable problem or pain, not a hard sell.\n"
+            "- Frame 2 presents the product as solution and includes a short CTA.\n"
             "- Each line must be 60 characters or fewer and complete.\n"
             "- No exaggerated medical, financial, or guaranteed claims.\n"
             "- No numbering. No markdown.\n\n"
@@ -839,12 +851,12 @@ def generate_script(api_key, title, description, language, niche="", provider="o
         usage = data.get("usage")
     parsed = parse_json_object(text)
     frames = parsed.get("frames") or []
-    if len(frames) != frame_count:
-        raise ValueError(f"{'Google Gemini' if provider == 'google' else 'OpenAI'} did not return exactly {frame_count} frame subtitles.")
+    if len(frames) != expected_frame_count:
+        raise ValueError(f"{'Google Gemini' if provider == 'google' else 'OpenAI'} did not return exactly {expected_frame_count} frame subtitles.")
     return {
         "title": title,
         "description": description or parsed.get("description") or title,
-        "frames": clean_story_frames(frames[:frame_count], language),
+        "frames": clean_story_frames(frames[:expected_frame_count], language),
         "usage": usage,
     }
 

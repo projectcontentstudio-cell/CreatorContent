@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=ready-affiliate-20260607">
+  <link rel="stylesheet" href="style.css?v=option-a-affiliate-20260609">
 </head>
 <body>
   <main class="app-shell">
@@ -50,25 +50,17 @@
         <div id="affiliateSetupPanel" class="setup-step affiliate-setup-panel" hidden>
           <div class="step-label">
             <span>2</span>
-            <strong>Affiliate setup</strong>
+            <strong>Affiliate MVP</strong>
           </div>
           <div class="field-group first-field">
-            <label for="affiliateGoal">Selling angle</label>
+            <label for="affiliateGoal">Template</label>
             <select id="affiliateGoal">
-              <option value="problem" selected>Problem/Solution</option>
-              <option value="review">Honest Review</option>
-              <option value="demo">Product Demo</option>
-              <option value="before-after">Before/After</option>
-              <option value="unboxing">Unboxing</option>
+              <option value="problem" selected>Problem to Solution</option>
             </select>
           </div>
-          <div class="field-group">
-            <label for="affiliateLength">Affiliate format</label>
-            <select id="affiliateLength">
-              <option value="10" selected>10s Simple - 2 images</option>
-              <option value="15">15s Product Short - 3 images</option>
-              <option value="30">30s TikTok Affiliate - 6 images</option>
-            </select>
+          <div class="affiliate-mvp-note">
+            <strong>2 AI scene images + MP4 export</strong>
+            <span>Default flow is cheap: no Veo unless user chooses optional add-on.</span>
           </div>
         </div>
 
@@ -135,13 +127,13 @@
             </label>
             <label>
               Main benefit
-              <input id="productBenefit" type="text" placeholder="Example: Blend juice anywhere">
+              <input id="productBenefit" type="text" placeholder="Example: prep bahan jadi cepat">
             </label>
           </div>
           <div class="field-row">
             <label>
               Target buyer
-              <input id="targetBuyer" type="text" placeholder="Example: busy moms, students">
+              <input id="targetBuyer" type="text" placeholder="Example: ibu sibuk, student">
             </label>
             <label>
               Price / offer
@@ -150,13 +142,13 @@
           </div>
           <div class="field-group">
             <label for="affiliateCta">Call to action</label>
-            <input id="affiliateCta" type="text" value="Check the product link before it sells out.">
+            <input id="affiliateCta" type="text" value="Klik beg kuning untuk tengok harga.">
           </div>
         </div>
         <div id="productUploadPanel" class="product-upload-panel" hidden>
           <div>
-            <strong>Product image</strong>
-            <small id="productUploadStatus">Upload one product photo for affiliate images and Veo.</small>
+            <strong>Product photo reference</strong>
+            <small id="productUploadStatus">Upload one clear product photo. Best: 800px+, product fills 35% of image.</small>
           </div>
           <label class="product-upload-button">
             <input id="productImageInput" type="file" accept="image/*">
@@ -192,7 +184,7 @@
             <option value="high">High - best quality</option>
           </select>
         </div>
-        <div class="field-group">
+        <div id="durationField" class="field-group">
           <label for="videoDuration">Video duration</label>
           <select id="videoDuration">
             <option value="20" selected>20 seconds - 4 images</option>
@@ -333,7 +325,7 @@
               <span id="manualUploadButtonText">Manual Upload</span>
             </label>
             <button id="generateImagesBtn" class="primary-btn" type="button">Generate Image</button>
-            <button id="generateVeoBtn" class="secondary-btn" type="button" hidden>Veo Fast 8s</button>
+            <button id="generateVeoBtn" class="secondary-btn" type="button" hidden>Optional Veo 8s</button>
           </div>
         </div>
 
@@ -428,6 +420,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=ready-affiliate-20260607"></script>
+  <script src="app.js?v=option-a-affiliate-20260609"></script>
 </body>
 </html>

@@ -17,19 +17,20 @@ export default async function handler(req, res) {
     const targetBuyer = String(body.targetBuyer || "the ideal buyer").trim();
     const productOffer = String(body.productOffer || "no specific offer").trim();
     const affiliateCta = String(body.affiliateCta || "Check the product link before it sells out.").trim();
-    const affiliateGoal = String(body.affiliateGoal || "problem").trim();
+    const affiliateFrameCount = 2;
     const affiliatePrompt = [
-      `Create a TikTok affiliate video script for exactly ${frameCount} frames.`,
+      `Create a TikTok affiliate product MVP script for exactly ${affiliateFrameCount} frames.`,
       `Return ONLY valid JSON like {"title":"string","description":"string","frames":["line1","line2"]}.`,
       `Write every narration line in ${languageName} only.`,
       `Each line must be 60 characters or fewer and complete.`,
-      `Selling angle: ${affiliateGoal}.`,
+      `Template: Problem to Solution.`,
       `Product: ${productName}.`,
       `Main benefit: ${productBenefit}.`,
       `Target buyer: ${targetBuyer}.`,
       `Offer: ${productOffer}.`,
       `CTA: ${affiliateCta}`,
-      `Video structure: first frame must hook/problem and reveal product fast; middle frames demo benefit or proof; final frame strong CTA.`,
+      `Frame 1 must be a relatable problem or pain, not a hard sell.`,
+      `Frame 2 must present the product as the solution and include a short CTA.`,
       `No exaggerated medical, financial, or guaranteed claims.`,
       `No numbering inside subtitles. No markdown.`,
       `User direction: ${description || "Make it clear, direct, and ready to sell."}`,
@@ -50,9 +51,10 @@ export default async function handler(req, res) {
       contents: [{ parts: [{ text: mode === "affiliate" ? affiliatePrompt : prompt }] }],
       generationConfig: { temperature: 0.8 },
     }, apiKey);
+    const expectedFrameCount = mode === "affiliate" ? affiliateFrameCount : frameCount;
     const parsed = parseJsonObject(extractGeminiText(data));
-    const frames = (parsed.frames || []).slice(0, frameCount);
-    if (frames.length !== frameCount) throw new Error(`Gemini did not return exactly ${frameCount} frame subtitles.`);
+    const frames = (parsed.frames || []).slice(0, expectedFrameCount);
+    if (frames.length !== expectedFrameCount) throw new Error(`Gemini did not return exactly ${expectedFrameCount} frame subtitles.`);
     sendJson(res, 200, {
       ok: true,
       title,

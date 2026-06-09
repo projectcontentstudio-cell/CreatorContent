@@ -18,6 +18,17 @@ function buildPrompt(body) {
   const beat = subtitles[index] || body.description || body.idea || body.title || "affiliate product scene";
   const mode = body.mode === "affiliate" ? "Affiliate product video" : "Storytelling video";
   const aspect = body.format === "landscape" ? "16:9 landscape" : "9:16 vertical portrait";
+  const affiliateScene = index === 0
+    ? [
+        "Scene role: Problem scene.",
+        "Show a relatable daily pain before using the product. Keep it natural, not a hard sell.",
+        "The product can appear subtly if it helps preserve reference continuity, but the pain must be clear."
+      ].join(" ")
+    : [
+        "Scene role: Solution scene.",
+        "Show the uploaded product clearly as the simple way out of the problem.",
+        "Make the product central, desirable, and accurate for product shape, color, packaging, logo, and label."
+      ].join(" ");
   return [
     `Create image ${index + 1} for a ${mode}.`,
     `Format: ${aspect}.`,
@@ -25,9 +36,9 @@ function buildPrompt(body) {
     `Scene narration context, not visible text: ${beat}`,
     `Direction: ${body.idea || body.description || ""}`,
     body.mode === "affiliate"
-      ? "Make the uploaded product look desirable, clear, and central. Show benefit, lifestyle use, and buying desire. No fake brand claims."
+      ? `${affiliateScene} Preserve exact product identity from the uploaded reference when visible. No fake brand claims.`
       : "Keep one continuous character, setting, lighting, and visual style across scenes.",
-    "Cinematic high-quality frame, no subtitles, no captions, no watermark, no logo, no UI."
+    "Cinematic high-quality frame, no subtitles, no captions, no watermark, no UI, no extra logos beyond the real product label."
   ].join("\n");
 }
 
@@ -38,7 +49,7 @@ async function generateOpenAIImage(apiKey, body, prompt, referenceImage) {
     form.set("model", model);
     form.set("prompt", [
       "Use the uploaded product/reference image as the visual identity reference.",
-      "Preserve the product design and important visual details, but create a new selling scene.",
+      "Preserve product shape, color, packaging, logo, and label when visible, but create a new selling scene.",
       prompt
     ].join("\n"));
     form.set("n", "1");
